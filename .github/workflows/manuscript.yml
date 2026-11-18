@@ -2,7 +2,7 @@ name: Build and publish merged LNCS manuscript
 on:
   push:
     paths:
-      - '.source/main.tex.xz.b64'
+      - '.source/publish.txt'
   workflow_dispatch:
 permissions:
   contents: write
@@ -16,9 +16,10 @@ jobs:
       - name: Recover exact manuscript source
         shell: bash
         run: |
-          base64 --decode .source/main.tex.xz.b64 | xz --decompress > main.tex
+          cat .source/parts/part* | base64 --decode | xz --decompress > main.tex
           test "$(wc -c < main.tex)" -gt 35000
           grep -q 'documentclass\[runningheads\]{llncs}' main.tex
+          sha256sum main.tex
       - name: Compile Springer LNCS manuscript
         uses: xu-cheng/latex-action@v3
         with:
