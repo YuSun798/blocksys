@@ -1,0 +1,41 @@
+name: Build and publish merged LNCS manuscript
+on:
+  push:
+    paths:
+      - '.source/main.tex.xz.b64'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  manuscript:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Recover exact manuscript source
+        shell: bash
+        run: |
+          base64 --decode .source/main.tex.xz.b64 | xz --decompress > main.tex
+          test "$(wc -c < main.tex)" -gt 35000
+          grep -q 'documentclass\[runningheads\]{llncs}' main.tex
+      - name: Compile Springer LNCS manuscript
+        uses: xu-cheng/latex-action@v3
+        with:
+          root_file: main.tex
+          args: -pdf -interaction=nonstopmode -halt-on-error
+      - name: Store compiled PDF
+        uses: actions/upload-artifact@v4
+        with:
+          name: blocksys-2027-paper
+          path: main.pdf
+      - name: Commit Overleaf-visible LaTeX source to main
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add main.tex
+          if ! git diff --cached --quiet; then
+            git commit -m "Build: publish merged PriGraph-ShareRoute LNCS manuscript"
+            git push origin HEAD:main
+          fi
