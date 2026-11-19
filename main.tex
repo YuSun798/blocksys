@@ -28,6 +28,7 @@
 \author{Anonymous Authors}
 \authorrunning{Anonymous Authors}
 \institute{Anonymous Institution}
+\emergencystretch=1em
 \begin{document}
 \maketitle
 \begin{abstract}
@@ -88,7 +89,7 @@ We preserve the three \srcA{} rewrite operators and their conditions:
 \item \emph{Lift-Public-Subgraph} replaces a recognized canonical rule with a parameterized public artifact, keyed by rule/version and instantiated locally on private values; the public model returns a \emph{program}, not a user-specific answer.
 \item \emph{Late-Private-Fusion} extracts the public prefix of a mixed computation and defers the private combination to one final local fusion node.
 \end{itemize}
-Rewrites are admissible only when (a) the resulting graph satisfies the information-flow condition under all proposed public placements, (b) deterministic operations pass executable regression contracts, or non-deterministic operations have a local fallback and empirically bounded quality, and (c) reusable nodes expose typed interfaces and preconditions. Exhaustive search is impractical on large graphs, so the source uses bounded beam search over rewrites and an inner placement/cache search; small problems are evaluated with MILP. If no safe rewrite fits the budget, the original \srcA{} returns to local-only execution.
+A rewrite is admitted only with (i) legal information flow, (ii) an executable regression contract for deterministic steps or an empirical quality bound and local fallback for free-form steps, and (iii) typed, versioned interfaces for shareable nodes. PriGraph uses beam search over rewrites and an inner placement/cache planner (MILP on small cases). If no safe rewrite succeeds, it executes the original graph locally.
 
 A reusable artifact is a tuple of a parameterized program, typed inputs and outputs, assumptions, region, version, content hash, and validator. Strong schema, region, version, and assumption checks are required for safe cache hits; semantic similarity alone yields only a candidate for local verification. Creation occurs during graph rewriting, not after the first task completes. Expected reuse benefit is $R_{\mathrm{reuse}}=\sum_{a\in A(\Gtnew)}p_a[c_{\mathrm{gen}}(a)-c_{\mathrm{fv}}(a)]$. Artifacts must not contain private values or per-session MPC masks/triples.
 
