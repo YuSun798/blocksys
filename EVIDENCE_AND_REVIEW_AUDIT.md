@@ -38,7 +38,7 @@ Source: `experiments/causal_privacy_cpu.py`; raw data and summary under `experim
 4. **Data and model scale:** prefill vs decode, longer contexts, 7B+ protected activations, realistic regions/WAN and heterogeneous peers; separate numerical error from task accuracy.
 5. **Cost-model confounding:** source simulated reuse and planner proxy should not be reported as live financial savings; measure planner CPU latency, cache misses, networking, cost gaps and session-unique offline triples.
 6. **New CPU test overclaims:** it is random two-layer attention, not proof of soundness. Extend to pretrained decoders and dynamic execution traces, examine public-cache lookups and rejection of illegal declassification.
-7. **Bibliography:** titles and venue metadata inherited from the two PDF drafts should be verified against primary publishers and normalized, particularly entries with placeholder author strings before submission.
+7. **Bibliography:** corrected the original PPMI entry against arXiv:2506.17336 (Bae et al.; the supplied PDF had an incorrect title/placeholder author), and checked MINIM against the ICML 2026 PMLR entry. Other titles and venue metadata inherited from both PDFs still merit full primary-source verification before submission.
 8. **Single-blind submission:** author info must be authentic; the draft intentionally inherits anonymous author placeholders.
 
 ## Exact proposed minimum factorial for a genuine future paper
