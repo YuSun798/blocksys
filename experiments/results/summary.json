@@ -1,0 +1,21 @@
+{
+  "experiment": "CPU-only randomly initialized 2-layer d=32 4-head causal Transformer; secret-position perturbation",
+  "seeds": 4,
+  "trials_per_cell": 12,
+  "sequence_length": 16,
+  "total_cases": 720,
+  "total_position_comparisons": 11520,
+  "causal_closure_false_negatives": 0,
+  "causal_closure_false_positives": 0,
+  "changed_activations_misclassified_by_naive_token_labels": 2133,
+  "task_contract_tests": 1200,
+  "admitted_public_formula_tasks": 800,
+  "required_local_fallback_tasks": 400,
+  "wrong_version_cache_rejections": 800,
+  "illegal_private_egress": 0,
+  "elapsed_seconds": 0.732,
+  "torch_version": "2.10.0+cpu",
+  "hardware": "CPU only",
+  "machine": "",
+  "claims_excluded": "MPC runtime, cryptographic security, LLM task accuracy, GPU speedup, real P2P networking"
+}
