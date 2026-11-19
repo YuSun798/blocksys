@@ -1,0 +1,16 @@
+pattern,private_fraction,n,mean_tainted_fraction,mean_safe_public_fraction,changed_naively_public,closure_false_negative,closure_false_positive
+suffix,0.0,48,0.0,1.0,0,0,0
+suffix,0.25,48,0.25,0.75,0,0,0
+suffix,0.5,48,0.5,0.5,0,0,0
+suffix,0.75,48,0.75,0.25,0,0,0
+suffix,1.0,48,1.0,0.0,0,0,0
+prefix,0.0,48,0.0,1.0,0,0,0
+prefix,0.25,48,1.0,0.0,576,0,0
+prefix,0.5,48,1.0,0.0,384,0,0
+prefix,0.75,48,1.0,0.0,192,0,0
+prefix,1.0,48,1.0,0.0,0,0,0
+interleaved,0.0,48,0.0,1.0,0,0,0
+interleaved,0.25,48,0.8502604166666666,0.14973958333333334,461,0,0
+interleaved,0.5,48,0.9440104166666666,0.055989583333333336,341,0,0
+interleaved,0.75,48,0.9830729166666666,0.016927083333333332,179,0,0
+interleaved,1.0,48,1.0,0.0,0,0,0
