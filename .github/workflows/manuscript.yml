@@ -1,42 +1,29 @@
-name: Build and publish merged LNCS manuscript
+name: Compile BlockSys 2027 revised manuscript
 on:
   push:
     paths:
-      - '.source/publish.txt'
+      - 'main.tex'
+      - '.github/workflows/manuscript.yml'
   workflow_dispatch:
 permissions:
-  contents: write
+  contents: read
 jobs:
-  manuscript:
+  latex:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          persist-credentials: true
-      - name: Recover exact manuscript source
-        shell: bash
+      - name: Verify revised manuscript root
         run: |
-          cat .source/parts/part* | base64 --decode | xz --decompress > main.tex
-          test "$(wc -c < main.tex)" -gt 35000
-          grep -q 'documentclass\[runningheads\]{llncs}' main.tex
-          sha256sum main.tex
+          test -s main.tex
+          grep -q 'Rewrite Before You Share' main.tex
+          grep -q 'CPU Diagnostic' main.tex
       - name: Compile Springer LNCS manuscript
         uses: xu-cheng/latex-action@v3
         with:
           root_file: main.tex
           args: -pdf -interaction=nonstopmode -halt-on-error
-      - name: Store compiled PDF
+      - name: Upload the PDF
         uses: actions/upload-artifact@v4
         with:
-          name: blocksys-2027-paper
+          name: blocksys-2027-revised-paper
           path: main.pdf
-      - name: Commit Overleaf-visible LaTeX source to main
-        shell: bash
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add main.tex
-          if ! git diff --cached --quiet; then
-            git commit -m "Build: publish merged PriGraph-ShareRoute LNCS manuscript"
-            git push origin HEAD:main
-          fi
