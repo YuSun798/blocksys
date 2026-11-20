@@ -3,6 +3,8 @@ on:
   push:
     paths:
       - 'main.tex'
+      - 'llncs.cls'
+      - 'figures/**'
       - 'experiments/**'
       - '.github/workflows/manuscript.yml'
   workflow_dispatch:
@@ -16,8 +18,9 @@ jobs:
       - name: Verify revised manuscript root
         run: |
           test -s main.tex
-          grep -q 'Rewrite Before You Share' main.tex
-          grep -q 'CPU Diagnostic' main.tex
+          grep -Fq 'Cross-Layer Privacy Compilation for Decentralized LLM Inference' main.tex
+          grep -Fq 'Matched Rewrite and Island Ablation' main.tex
+          grep -Fq 'version 2.25' llncs.cls
       - name: Compile Springer LNCS manuscript
         uses: xu-cheng/latex-action@v3
         with:

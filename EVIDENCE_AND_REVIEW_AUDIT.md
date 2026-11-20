@@ -56,3 +56,20 @@ The latest two attachments match the earlier source files byte-for-byte. SHA-256
 
 - PriGraph: `b94dc97540927d13bebed179193e19fb33ec85daab07f523d7bf3317925c935d`
 - ShareRoute: `ee598947f85de22d288a077e3382621731d027a5d999e05ec62c58fa247fbe25`
+
+## Figure and table references
+
+These papers informed visual conventions. The manuscript figures and values come from the two source studies, the compiler design and the archived CPU experiments.
+
+| Proceedings paper | Layout decision used in this revision |
+|---|---|
+| [Orca, OSDI 2022](https://www.usenix.org/system/files/osdi22-yu.pdf) | Separate compilation flow and execution into named panels. |
+| [FlashAttention, NeurIPS 2022](https://proceedings.neurips.cc/paper/2022/hash/67d57c32e20fd0a7a302cb81d36e40d5-Abstract.html) | Use a spatial diagram to expose structure, with each mark defined in the legend. |
+| [PagedAttention, SOSP 2023](https://doi.org/10.1145/3600006.3613165) | Use an aligned cell grid for token position and public-state comparisons. |
+| [SecretFlow-SPU, USENIX ATC 2023](https://www.usenix.org/conference/atc23/presentation/ma) | Give compiler stages and runtime endpoints distinct visual roles. |
+| [BOLT, IEEE S&P 2024](https://doi.org/10.1109/SP54263.2024.00130) | Identify the protected computation primitive at the point where it executes. |
+| [DistServe, OSDI 2024](https://www.usenix.org/system/files/osdi24-zhong-yinmin.pdf) | Carry comparison conditions and physical units in quantitative headers. |
+| [Sarathi-Serve, OSDI 2024](https://www.usenix.org/system/files/osdi24-agrawal.pdf) | Report paired workload conditions with the results they qualify. |
+| [PowerInfer, SOSP 2024](https://doi.org/10.1145/3694715.3695964) | Align resource categories so placement can be compared spatially. |
+| [Breaking the Layer Barrier, USENIX Security 2025](https://www.usenix.org/conference/usenixsecurity25/presentation/xu-tianshi) | Give alternative security backends separate grouped columns. |
+| [PlanetServe, NSDI 2026](https://www.usenix.org/conference/nsdi26/presentation/fang) | Route returned artifacts and output shares explicitly to the trusted client. |

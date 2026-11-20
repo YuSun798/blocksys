@@ -1,7 +1,7 @@
-# Rewrite Before You Share — BlockSys 2027 draft
+# Cross-Layer Privacy Compilation — BlockSys 2027
 
-**Paper:** *Rewrite Before You Share: Cross-Layer Privacy Compilation for Decentralized LLM Inference*  
-**Main file:** [`main.tex`](main.tex), Springer `llncs`, **14 pages including appendix and references**.  
+**Paper:** *Cross-Layer Privacy Compilation for Decentralized LLM Inference*
+**Main file:** [`main.tex`](main.tex), official BlockSys 2027 `llncs.cls` v2.25, with figures in `figures/`.
 **Status:** research manuscript with two CPU diagnostics; **not** a deployed or fully benchmarked combined MPC system.
 
 ## Contents
@@ -38,7 +38,7 @@ python3 experiments/rewrite_island_cpu.py --output experiments/results/rewrite_i
 python3 experiments/check_manuscript_evidence.py main.pdf
 ```
 
-The second command requires Poppler's `pdfinfo` and a compiled manuscript. CI checks the archived causal counts, reruns the arithmetic ablation, and enforces the conference page limit. A separate local rerun reproduced the full causal results on Apple Silicon with PyTorch 2.8.0.
+The second command requires Poppler's `pdfinfo` and `pdftotext` and a compiled manuscript. CI checks the archived causal counts, reruns the arithmetic ablation, and enforces the conference page limit. A separate local rerun reproduced the full causal results on Apple Silicon with PyTorch 2.8.0.
 
 ## Source-prototype experimental provenance
 
@@ -50,14 +50,14 @@ With a TeX installation providing `llncs.cls` and `latexmk`:
 
 ```bash
 latexmk -pdf -interaction=nonstopmode -halt-on-error main.tex
-pdfinfo main.pdf | grep Pages  # should say 14
+python3 experiments/check_manuscript_evidence.py main.pdf
 ```
 
 **BlockSys 2027** specifies a maximum of 14 Springer LNCS pages, appendix included, single-blind review. The main author block remains anonymous as in the original PDFs; replace it with the appropriate genuine author information before final submission.
 
 ## Overleaf synchronization
 
-GitHub pushes do not automatically update an Overleaf project unless a separate synchronization is configured. In an Overleaf project connected to `YuSun798/blocksys`: **Integrations > GitHub > Pull GitHub changes**, then compile `main.tex`. If no connection exists, import the GitHub repo into a new Overleaf project. This README does not claim an Overleaf pull happened.
+GitHub pushes do not automatically update an Overleaf project unless a separate synchronization is configured. In an Overleaf project connected to `YuSun798/blocksys`: **Integrations > GitHub > Pull GitHub changes**, then compile `main.tex` with pdfLaTeX. If no connection exists, import the GitHub repo into a new Overleaf project. This README does not claim an Overleaf pull happened.
 
 ## Remaining essential research work
 

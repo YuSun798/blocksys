@@ -43,4 +43,19 @@ metadata = subprocess.check_output(["pdfinfo", args.pdf], text=True)
 pages = int(re.search(r"^Pages:\s+(\d+)", metadata, re.MULTILINE)[1])
 if pages > 14:
     raise SystemExit(f"LNCS manuscript exceeds the 14-page limit: {pages} pages.")
-print(f"PASS: {pages} pages, 1,600 matched evaluations, and 720 causal cases.")
+paper = subprocess.check_output(["pdftotext", "-layout", args.pdf, "-"], text=True)
+if re.search(r"\b(?:TODO|TBD|lorem ipsum|contribution title|title suppressed)\b|\?\?",
+             paper, re.IGNORECASE):
+    raise SystemExit("The compiled PDF contains a placeholder or unresolved reference.")
+for heading in ("Compile on the trusted client", "Disclosure of Interests"):
+    if heading not in paper:
+        raise SystemExit(f"Expected manuscript content missing: {heading}")
+if "The authors declare no competing interests relevant to this work." not in " ".join(paper.split()):
+    raise SystemExit("The competing-interests statement is missing.")
+abstract = re.search(r"Abstract\.\s*(.*?)\s*Keywords:", paper, re.DOTALL)
+if abstract is None:
+    raise SystemExit("Could not locate the LNCS abstract.")
+words = len(re.findall(r"[\w]+(?:[-,.][\w]+)*", re.sub(r"(\w)-\s*\n\s*", r"\1", abstract[1])))
+if not 150 <= words <= 250:
+    raise SystemExit(f"Abstract has {words} words. The template range is 150–250.")
+print(f"PASS: {pages} pages, {words}-word abstract, 1,600 matched evaluations, and 720 causal cases.")
