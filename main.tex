@@ -6,6 +6,11 @@
 \usepackage{graphicx}
 \usepackage[hidelinks,pdfusetitle,pdflang={en}]{hyperref}
 \usetikzlibrary{arrows.meta}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\definecolor{routeLocal}{HTML}{295985}
+\definecolor{routePublic}{HTML}{00766E}
+\definecolor{routeSecure}{HTML}{AD4C20}
 \newcommand{\Private}{\ensuremath{\mathsf{Private}}}
 \newcommand{\Public}{\ensuremath{\mathsf{Public}}}
 \newcommand{\Approved}{\ensuremath{\mathsf{Approved}}}
@@ -212,6 +217,22 @@ the mean public-output fraction was 15.0\%.}
 \label{fig:causal}
 \end{figure}
 
+Figure~\ref{fig:causal-sweep} extends the comparison across all tested
+private fractions. The measured public-output fraction under random placement
+tracks the analytic expectation from Eq.~\eqref{eq:prefix} and the public-gap
+argument, with a maximum absolute difference below 0.24 percentage points
+over the five sampled fractions.
+
+\begin{figure}[tb]
+\centering
+\input{figures/causal-sweep}
+\caption{Public-output fraction versus private-input fraction in the CPU
+diagnostic ($L=16$, 48 paired trials per point). Open circles show the exact
+expectation for uniformly chosen private positions. Lines guide the eye
+between tested fractions.}
+\label{fig:causal-sweep}
+\end{figure}
+
 \paragraph{Task-level safety check.}
 A second CPU-only deterministic harness generated 1,200 synthetic arithmetic tasks. Eight hundred with public formula schemas and private numeric bindings passed typed local-evaluation contracts; 400 with private formulas correctly triggered the local fallback. Eight hundred deliberately wrong-version artifact lookups were refused. These are \emph{unit tests of an explicit-formula toy interface}, not independent evidence of real-world rewrite accuracy, cryptographic security or production cache safety. The two source studies' accuracy and MPC benchmarks must not be conflated with these tests.
 
@@ -255,7 +276,7 @@ end-to-end quality.
 \caption{Matched arithmetic ablation at width 64. Bytes sum the two parties'
 opening traffic per request. Each row evaluates the same 100 inputs.}
 \label{tab:matched}
-\small\renewcommand{\arraystretch}{1.16}
+\small\renewcommand{\arraystretch}{1.16}\setlength{\tabcolsep}{7pt}
 \begin{tabular}{@{}lrrrr@{}}
 \toprule
 Configuration & Secure products & Bytes & Rounds & Exact outputs \\
@@ -267,6 +288,20 @@ Rewrite and islands & \textbf{1} & \textbf{32} & 1 & 100/100 \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+Figure~\ref{fig:ablation-sweep} shows the scaling across all four tested
+widths. The joint configuration uses one secure product at each width.
+The original graph has $m$ secure products with or without selective
+execution, and the rewritten graph under full MPC uses $m+1$.
+
+\begin{figure}[tb]
+\centering
+\input{figures/ablation-sweep}
+\caption{Secure products per request in the matched arithmetic emulator
+(100 paired inputs per width). Full MPC and islands only coincide at every
+tested width. The horizontal axis uses base-four spacing.}
+\label{fig:ablation-sweep}
+\end{figure}
 
 \section{Related Work}
 Public/private routing approaches such as PPMI, PRISM, MINIM, and agentic privacy-preserving ML specialize disclosure and placement but do not jointly construct reusable parameterized task programs and optimize their residual MPC graphs \cite{ppmi,prism,minim,agenticppml,splitdenoise}. Agentic plan caching and collaborative numerical reasoning relate to the public-program reuse idea, whereas LLMCompiler and equality saturation provide antecedents for typed graph transformations \cite{apc,relaycache,collab,compiler,egg}. Security-aware DAG scheduling, HEFT, and static information-flow control provide placement and typing foundations \cite{secds,heft,sabelfeld,cocoon}. SecretFlow-SPU and MP-SPDZ provide MPC backends. Systems including PUMA, BOLT, SOAL, FuseFSS, BLB, and MPCache optimize secure inference operations that can compose with island selection \cite{secretflow,mpspdz,puma,bolt,soal,fusefss,blb,mpcache,cheng}. P2P systems such as Petals, Swarm, and PlanetServe supply deployment motivations rather than a proof of private execution \cite{petals,swarm,planetserve}.

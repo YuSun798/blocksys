@@ -38,7 +38,7 @@ python3 experiments/rewrite_island_cpu.py --output experiments/results/rewrite_i
 python3 experiments/check_manuscript_evidence.py main.pdf
 ```
 
-The second command requires Poppler's `pdfinfo` and `pdftotext` and a compiled manuscript. CI checks the archived causal counts, reruns the arithmetic ablation, and enforces the conference page limit. A separate local rerun reproduced the full causal results on Apple Silicon with PyTorch 2.8.0.
+The second command requires Poppler's `pdfinfo` and `pdftotext` and a compiled manuscript. Use `python3 experiments/figure_data.py` to refresh the vector plot data after changing the archived results. CI checks the plotted data and archived causal counts, reruns the arithmetic ablation, and enforces the conference page limit. A separate local rerun reproduced the full causal results on Apple Silicon with PyTorch 2.8.0.
 
 ## Source-prototype experimental provenance
 

@@ -1,0 +1,20 @@
+\begin{tikzpicture}
+\begin{axis}[width=11.5cm,height=5.0cm,
+  xmin=-4,xmax=104,ymin=-4,ymax=104,
+  xtick={0,25,50,75,100},ytick={0,25,50,75,100},
+  xlabel={Private input tokens (\%)}, ylabel={Public output states (\%)},
+  legend style={font=\footnotesize,at={(.5,1.04)},anchor=south,legend columns=2,
+                draw=none,fill=none,cells={anchor=west},column sep=8pt},
+  tick label style={font=\footnotesize},label style={font=\small},
+  ymajorgrids,grid style={black!13},axis line style={black!65},
+  every axis plot/.append style={semithick,mark size=2.2pt}]
+\addplot[routePublic,mark=*] table[x=private,y=suffix]{figures/causal-sweep.dat};
+\addlegendentry{Private suffix}
+\addplot[routeSecure,dashed,mark=square*] table[x=private,y=prefix]{figures/causal-sweep.dat};
+\addlegendentry{Private prefix}
+\addplot[routeLocal,densely dotted,mark=triangle*] table[x=private,y=interleaved]{figures/causal-sweep.dat};
+\addlegendentry{Random placement, measured}
+\addplot[black,only marks,mark=o,mark size=3.3pt] table[x=private,y=expected]{figures/causal-sweep.dat};
+\addlegendentry{Random placement, analytic mean}
+\end{axis}
+\end{tikzpicture}

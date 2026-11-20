@@ -73,3 +73,5 @@ These papers informed visual conventions. The manuscript figures and values come
 | [PowerInfer, SOSP 2024](https://doi.org/10.1145/3694715.3695964) | Align resource categories so placement can be compared spatially. |
 | [Breaking the Layer Barrier, USENIX Security 2025](https://www.usenix.org/conference/usenixsecurity25/presentation/xu-tianshi) | Give alternative security backends separate grouped columns. |
 | [PlanetServe, NSDI 2026](https://www.usenix.org/conference/nsdi26/presentation/fang) | Route returned artifacts and output shares explicitly to the trusted client. |
+
+The color revision uses blue for trusted client computation, teal for public execution, and orange for secure execution. Text labels, marker shapes, line patterns and fill contrast carry the same distinctions in grayscale. The causal sweep uses the archived aggregate CSV and overlays the exact expectation for uniformly placed private inputs. The width sweep uses the archived matched arithmetic results and combines the two configurations with numerically identical secure-product counts. The plot data are regenerated with `python3 experiments/figure_data.py` and checked by CI.

@@ -30,6 +30,7 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y poppler-utils
+          python3 experiments/figure_data.py --check
           python3 experiments/check_manuscript_evidence.py main.pdf
       - name: Upload the PDF
         uses: actions/upload-artifact@v4

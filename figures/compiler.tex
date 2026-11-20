@@ -6,19 +6,19 @@
   guide/.style={-{Stealth[length=2mm]},semithick,dashed}]
 \node[anchor=west,font=\small\bfseries] at (-.04,1.08) {(a) Compile on the trusted client};
 \node[block] (input) at (1.78,.38) {Request and\\disclosure policy};
-\node[block,fill=black!7] (task) at (6.08,.38) {\textbf{PriGraph}\\Rewrite the task DAG};
-\node[block,fill=black!7] (op) at (10.38,.38) {\textbf{ShareRoute}\\Operator trace and labels};
+\node[block,draw=routeLocal,fill=routeLocal!10] (task) at (6.08,.38) {\textbf{PriGraph}\\Rewrite the task DAG};
+\node[block,draw=routeLocal,fill=routeLocal!10] (op) at (10.38,.38) {\textbf{ShareRoute}\\Operator trace and labels};
 \draw[flow] (input) -- (task);
 \draw[flow] (task) -- (op);
 \node[anchor=west,font=\small\bfseries] at (-.04,-.78) {(b) Execute the selected plan};
-\node[block] (local) at (1.78,-2.04) {\textbf{Trusted client}\\Bind inputs, return output};
-\node[block,fill=black!4] (public) at (6.08,-2.04) {\textbf{Public peers}\\Approved plaintext};
-\node[block,fill=black!14] (secure) at (10.38,-2.04) {\textbf{MPC parties}\\Secret-shared operands};
+\node[block,draw=routeLocal,fill=routeLocal!10] (local) at (1.78,-2.04) {\textbf{Trusted client}\\Bind inputs and decode};
+\node[block,draw=routePublic,fill=routePublic!12] (public) at (6.08,-2.04) {\textbf{Public peers}\\Approved plaintext};
+\node[block,draw=routeSecure,fill=routeSecure!24] (secure) at (10.38,-2.04) {\textbf{MPC parties}\\Secret-shared operands};
 \draw[guide] (op.south) -- (10.38,-1.13) -- (1.78,-1.13) -- (local.north);
 \draw[guide] (6.08,-1.13) -- (public.north);
 \draw[guide] (10.38,-1.13) -- (secure.north);
-\draw[flow] (public.south) -- ++(0,-.28) -| ([xshift=-.38cm]local.south);
-\draw[flow] (secure.south) -- ++(0,-.61) -| ([xshift=.38cm]local.south);
+\draw[flow,routePublic] (public.south) -- ++(0,-.28) -| ([xshift=-.38cm]local.south);
+\draw[flow,routeSecure] (secure.south) -- ++(0,-.61) -| ([xshift=.38cm]local.south);
 \node[fill=white,font=\footnotesize] at (3.85,-2.75) {Public artifact};
 \node[fill=white,font=\footnotesize] at (7.93,-3.08) {Result shares};
 \end{tikzpicture}
