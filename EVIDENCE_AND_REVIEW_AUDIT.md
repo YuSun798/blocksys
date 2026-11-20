@@ -46,3 +46,13 @@ Source: `experiments/causal_privacy_cpu.py`; raw data and summary under `experim
 For each fixed stage and matched workload: A local-7B with deterministic tool; B task rewriting + local private binding; C residual full-model MPC; D operator-only island MPC; E rewrite + island MPC (cache off); F rewrite + island MPC + verified reuse; G full joint planner vs sequential and exhaustive oracle on small DAGs. Record task correctness/quality, privacy policy leakage, online/offline bytes, latency breakdown, GPU-hours, WAN effects, cache safety, MPC numeric error, failure recovery, and 95% seed-level uncertainty. Include private formula, private prefix, interleaved secrets, 100% private, replayed cache poison, and unsafe static public masks.
 
 This audit is an explicit boundary on the claims made in the revised paper. It is not a promise of results from experiments not run.
+
+
+## Matched cross-layer arithmetic ablation
+
+A new paired test evaluates the same 400 synthetic requests under four rewrite × island configurations. The output of every configuration equals the ring reference (1,600/1,600). At width 64, per-request logical peer bytes are 2,048 (full), 2,048 (islands alone), 2,080 (rewrite alone), and 32 (both). All arms batch their openings in one round. The deterministic in-process emulator exercises additive sharing and Beaver openings with independent dealer triples. It excludes client ingress/egress, preprocessing and transport, and supplies no LLM, WAN or cryptographic deployment evidence. The required offload policy isolates the task-to-operator handoff. A local arithmetic evaluator can solve the entire workload.
+
+The latest two attachments match the earlier source files byte-for-byte. SHA-256:
+
+- PriGraph: `b94dc97540927d13bebed179193e19fb33ec85daab07f523d7bf3317925c935d`
+- ShareRoute: `ee598947f85de22d288a077e3382621731d027a5d999e05ec62c58fa247fbe25`

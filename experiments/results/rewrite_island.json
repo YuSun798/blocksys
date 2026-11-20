@@ -1,0 +1,117 @@
+{
+  "ring_bits": 64,
+  "results": {
+    "width=1/rewrite=0/islands=0": {
+      "cases": 100,
+      "mismatches": 0,
+      "multiplications": 100,
+      "peer_online_bytes": 3200,
+      "batched_rounds": 100
+    },
+    "width=1/rewrite=0/islands=1": {
+      "cases": 100,
+      "mismatches": 0,
+      "multiplications": 100,
+      "peer_online_bytes": 3200,
+      "batched_rounds": 100
+    },
+    "width=1/rewrite=1/islands=0": {
+      "cases": 100,
+      "mismatches": 0,
+      "multiplications": 200,
+      "peer_online_bytes": 6400,
+      "batched_rounds": 100
+    },
+    "width=1/rewrite=1/islands=1": {
+      "cases": 100,
+      "mismatches": 0,
+      "multiplications": 100,
+      "peer_online_bytes": 3200,
+      "batched_rounds": 100
+    },
+    "width=4/rewrite=0/islands=0": {
+      "cases": 100,
+      "mismatches": 0,
+      "multiplications": 400,
+      "peer_online_bytes": 12800,
+      "batched_rounds": 100
+    },
+    "width=4/rewrite=0/islands=1": {
+      "cases": 100,
+      "mismatches": 0,
+      "multiplications": 400,
+      "peer_online_bytes": 12800,
+      "batched_rounds": 100
+    },
+    "width=4/rewrite=1/islands=0": {
+      "cases": 100,
+      "mismatches": 0,
+      "multiplications": 500,
+      "peer_online_bytes": 16000,
+      "batched_rounds": 100
+    },
+    "width=4/rewrite=1/islands=1": {
+      "cases": 100,
+      "mismatches": 0,
+      "multiplications": 100,
+      "peer_online_bytes": 3200,
+      "batched_rounds": 100
+    },
+    "width=16/rewrite=0/islands=0": {
+      "cases": 100,
+      "mismatches": 0,
+      "multiplications": 1600,
+      "peer_online_bytes": 51200,
+      "batched_rounds": 100
+    },
+    "width=16/rewrite=0/islands=1": {
+      "cases": 100,
+      "mismatches": 0,
+      "multiplications": 1600,
+      "peer_online_bytes": 51200,
+      "batched_rounds": 100
+    },
+    "width=16/rewrite=1/islands=0": {
+      "cases": 100,
+      "mismatches": 0,
+      "multiplications": 1700,
+      "peer_online_bytes": 54400,
+      "batched_rounds": 100
+    },
+    "width=16/rewrite=1/islands=1": {
+      "cases": 100,
+      "mismatches": 0,
+      "multiplications": 100,
+      "peer_online_bytes": 3200,
+      "batched_rounds": 100
+    },
+    "width=64/rewrite=0/islands=0": {
+      "cases": 100,
+      "mismatches": 0,
+      "multiplications": 6400,
+      "peer_online_bytes": 204800,
+      "batched_rounds": 100
+    },
+    "width=64/rewrite=0/islands=1": {
+      "cases": 100,
+      "mismatches": 0,
+      "multiplications": 6400,
+      "peer_online_bytes": 204800,
+      "batched_rounds": 100
+    },
+    "width=64/rewrite=1/islands=0": {
+      "cases": 100,
+      "mismatches": 0,
+      "multiplications": 6500,
+      "peer_online_bytes": 208000,
+      "batched_rounds": 100
+    },
+    "width=64/rewrite=1/islands=1": {
+      "cases": 100,
+      "mismatches": 0,
+      "multiplications": 100,
+      "peer_online_bytes": 3200,
+      "batched_rounds": 100
+    }
+  }
+}

@@ -32,7 +32,7 @@
 \begin{document}
 \maketitle
 \begin{abstract}
-Private inference on untrusted peer-to-peer (P2P) GPUs presents two distinct challenges: avoiding unnecessary exposure of user secrets and protecting computations that necessarily depend on them. We develop a \emph{cross-layer compilation design} that connects typed task-level reasoning rewrites to operator-level secure multi-party computation (MPC). Public parameterized programs are extracted and cached before private bindings are evaluated locally; residual off-device private computation is traced to secure MPC islands under explicit two-party or honest-majority three-party assumptions. The interface couples rewrite validity, information-flow closure, share lifecycle, and a security-constrained cost model. We report three \emph{clearly separated} sources of evidence. In the PriGraph task prototype, verified program execution reaches 100\% on 360 synthetic tasks (54.2\% local-7B; 69.2\% privacy-violating remote-14B); a tool-augmented local control matches accuracy on the explicit-formula financial benchmark. In ShareRoute, real MPC execution on a $d=32$ mini-GPT achieves 3.9$\times$ less time via selective islands within semi-honest 2PC; the often-cited 95$\times$ combines island selection \emph{and} a move to a different 3PC trust model. Finally, a new reproducible CPU-only causal-attention diagnostic tests 720 private-position perturbations (11,520 position comparisons): dependency closure has zero observed misclassifications, while naive token labels wrongly treat 2,133 changed activations as public. This result reveals that secret \emph{position}, not just secret fraction, determines the secure-execution footprint. We distinguish this diagnostic from cryptographic MPC benchmarks, and specify the end-to-end experiments still needed to substantiate cross-layer performance claims.
+Private inference on untrusted peer-to-peer (P2P) GPUs presents two distinct challenges: avoiding unnecessary exposure of user secrets and protecting computations that necessarily depend on them. We develop a \emph{cross-layer compilation design} that connects typed task-level reasoning rewrites to operator-level secure multi-party computation (MPC). Public parameterized programs are extracted and cached before private bindings are evaluated locally; residual off-device private computation is traced to secure MPC islands under explicit two-party or honest-majority three-party assumptions. The interface couples rewrite validity, information-flow closure, share lifecycle, and a security-constrained cost model. We report three \emph{clearly separated} sources of evidence. In the PriGraph task prototype, verified program execution reaches 100\% on 360 synthetic tasks (54.2\% local-7B; 69.2\% privacy-violating remote-14B); a tool-augmented local control matches accuracy on the explicit-formula financial benchmark. In ShareRoute, real MPC execution on a $d=32$ mini-GPT achieves 3.9$\times$ less time via selective islands within semi-honest 2PC; the often-cited 95$\times$ combines island selection \emph{and} a move to a different 3PC trust model. Finally, a new reproducible CPU-only causal-attention diagnostic tests 720 private-position perturbations (11,520 position comparisons): dependency closure has zero observed misclassifications, while naive token labels wrongly treat 2,133 changed activations as public. This result reveals that secret \emph{position}, not just secret fraction, determines the secure-execution footprint. A paired ring-arithmetic emulator additionally shows that exact task rewriting can expose public products for selective execution without changing outputs. This establishes a cross-layer mechanism on a controlled workload.
 \keywords{Decentralized inference \and Privacy \and Graph compilation \and MPC}
 \end{abstract}
 
@@ -41,9 +41,9 @@ Decentralized LLM-serving networks aggregate heterogeneous GPUs, but open partic
 
 The two source studies attack different layers of this cost. \srcA{} treats a \emph{reasoning task} as a typed DAG and changes \emph{what is computed}: produce a public, parameterized program once and perform private instantiation locally. \srcB{} treats a \emph{model execution} as an operator DAG and changes \emph{which operations require MPC}, and then \emph{how} secure computation runs. Combining these mechanisms suggests a principled ordering: \emph{rewrite away avoidable private computation before protecting the unavoidable remainder}. Crucially, this is not equivalent to concatenating two optimizers. The task-level rewrite changes the operator-level privacy footprint, while MPC cost changes whether a seemingly beneficial rewrite should be selected.
 
-We describe a unified compilation interface with three legal execution paths: trusted local execution, public P2P execution of strictly public or approved data, and secure P2P execution on shares. Its optimization objective includes public generation/reuse, private MPC latency and bytes, WAN transfers, and quality loss. Hard security constraints prevent exchanging confidentiality for speed. The architecture is a \emph{proposed integration}; results from the two source prototypes remain independent. We add a real CPU-only dependency diagnostic, not a live MPC or end-to-end LLM-serving benchmark.
+We describe a unified compilation interface with three legal execution paths: trusted local execution, public P2P execution of strictly public or approved data, and secure P2P execution on shares. Its optimization objective includes public generation/reuse, private MPC latency and bytes, WAN transfers, and quality loss. Hard security constraints prevent exchanging confidentiality for speed. The architecture is a \emph{proposed integration}; results from the two source prototypes remain independent. We add a CPU causal-dependency diagnostic and a matched arithmetic ablation of the two compiler passes.
 
-Our contributions are: (i) an explicit typed handoff from task rewrites to operator privacy closure; (ii) a security-stage-constrained planning formulation covering rewrite, reuse, and MPC selection; (iii) an apples-to-apples audit of \emph{what the two original studies actually measured}; and (iv) a runnable causal-dependency stress test exposing a consequential failure of naive public-token accounting. The complete task-to-MPC runtime remains future work; we do not claim a new cryptographic primitive or a unified speedup.
+Our contributions are: (i) an explicit typed handoff from task rewrites to operator privacy closure; (ii) a security-stage-constrained planning formulation covering rewrite, reuse, and MPC selection; (iii) an apples-to-apples audit of \emph{what the two original studies actually measured}; and (iv) reproducible tests of causal closure and the interaction between task rewriting and selective MPC. The complete task-to-MPC runtime remains future work; we do not claim a new cryptographic primitive or a unified speedup.
 
 \section{Threat Model and Execution Semantics}
 \paragraph{Participants and disclosure.}
@@ -107,7 +107,10 @@ For a standard \emph{dense causal} decoder that mixes all earlier positions, let
   q_t=\bigvee_{i\leq t}s_i,\qquad
   F_{\rm safe}=\frac{1}{L}\sum_{t=1}^{L}(1-q_t).
 \end{equation}
-Consequently, an approved public \emph{suffix} that follows private text is not automatically safe for plaintext execution: its hidden states can depend on earlier secrets. A public prefix followed by a private suffix is different. This conservative dependency rule depends on causal dense attention; explicit architectural block sparsity or correctly justified declassification may alter it. The rewrite compiler can change the $s_i$ actually presented to each model invocation, so task-level decisions must precede operator-level closure.
+Consequently, an approved public \emph{suffix} that follows private text is not automatically safe for plaintext execution: its hidden states can depend on earlier secrets. A public prefix followed by a private suffix is different. This conservative dependency rule depends on causal dense attention; explicit architectural block sparsity or correctly justified declassification may alter it. The rewrite compiler can change the $s_i$ actually presented to each model invocation, so task-level decisions must precede operator-level closure. For $k$ uniformly
+placed private positions among $L$ tokens, the $k+1$ public gaps are
+exchangeable and sum to $L-k$. The expected public prefix length is therefore
+$(L-k)/(k+1)$, giving $F_{\rm safe}=15\%$ in expectation at $L=16,k=4$.
 
 \paragraph{Compilation order and rejection.}
 For each task rewrite candidate $r$, the compiler (1) proves that public outputs are derived only from policy-approved inputs; (2) computes the program hash, version, region, and validator preconditions; (3) traces the model calls remaining after local binding; (4) computes operator taint and permissible secure islands; and (5) scores the plan only among protocols satisfying one fixed adversary stage. A failed executable contract, poisoned artifact, unsafe declassification, missing MPC cohort, or violated numerical tolerance rejects that candidate, rather than lowering its safety requirements. This order also clarifies a non-goal: secret-sharing inputs to a Transformer cannot be replaced by a public prompt merely because their \emph{task schema} is public.
@@ -139,7 +142,7 @@ The guarantee excludes task-pattern and timing leakage, network anonymity, unpro
 
 \begin{table}[t]\centering
 \caption{Juxtaposed evidence from the original papers. Each row compares \emph{scope and validity}, not numeric performance across incompatible workloads. The new CPU diagnostic is reported separately in Sec.~\ref{sec:cpu}.}\label{tab:sidebyside}\footnotesize
-\begin{tabular}{@{}p{2.15cm}p{4.05cm}p{4.05cm}@{}}\toprule
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{2.15cm}>{\raggedright\arraybackslash}p{4.05cm}>{\raggedright\arraybackslash}p{4.05cm}@{}}\toprule
 Question & PriGraph (task level) & ShareRoute (operator level) \\\midrule
 Unit of analysis & 360 verifiable tasks; 400 financial tasks & $d=32$ mini-GPT MPC; GPT-2 125M taint analysis \\
 Primary metric & Task correctness and reuse / planner proxy & Real 2PC/3PC time, per-party bytes, argmax \\
@@ -210,7 +213,7 @@ The full-private boundary is essential: once all relevant activations are privat
 
 \section{CPU Diagnostic: Where Secrets Contaminate Causal Attention}\label{sec:cpu}
 \paragraph{Question and implementation.}
-Does labeling only the \emph{secret token positions} correctly identify the states that must be kept out of plaintext P2P execution? We ran a new independent diagnostic on the available CPU using PyTorch 2.10: a randomly initialized, frozen, two-layer causal Transformer ($d=32$, four heads, FFN width 64, sequence length 16). It uses dense masked self-attention, LayerNorm and GELU; \emph{it is not the pretrained GPT-2 or cryptographic mini-GPT used by ShareRoute}. We varied the 0/25/50/75/100\% private-input fractions and three secret placements (prefix, suffix, uniformly sampled interleaving). With four model seeds and 12 perturbations/cell, this yields $5\times3\times4\times12=720$ paired input executions. Each pair changes only secret-position vectors; 16 output states are compared per pair. The source and raw per-case CSV are included in the repository, along with the command to repeat the test.
+Does labeling only the \emph{secret token positions} correctly identify the states that must be kept out of plaintext P2P execution? We ran a CPU diagnostic using PyTorch 2.10 and reproduced its counts on Apple Silicon with PyTorch 2.8: a randomly initialized, frozen, two-layer causal Transformer ($d=32$, four heads, FFN width 64, sequence length 16). It uses dense masked self-attention, LayerNorm and GELU; \emph{it is not the pretrained GPT-2 or cryptographic mini-GPT used by ShareRoute}. We varied the 0/25/50/75/100\% private-input fractions and three secret placements (prefix, suffix, uniformly sampled interleaving). With four model seeds and 12 perturbations/cell, this yields $5\times3\times4\times12=720$ paired input executions. Each pair changes only secret-position vectors; 16 output states are compared per pair. The source and raw per-case CSV are included in the repository, along with the command to repeat the test.
 
 \paragraph{Results.}
 Table~\ref{tab:cpu} records the measured safe-position fraction. Causal dependency closure $q_t$ from Eq.~\eqref{eq:prefix} matched all 11,520 observed position-level change/no-change decisions at a $10^{-6}$ threshold (zero observed false positive and false negative decisions). A naive detector treating all non-secret input positions as public missed 2,133 changed output positions across the same 720 pairs. At 25\% secret tokens, putting secrets at the \emph{end} leaves 75\% of states public, putting them at the \emph{beginning} leaves none public, and randomly interleaving them leaves only 15.0\% public on average. The pattern holds without any MPC implementation or assumed communication-cost model: disclosure safety cannot be inferred from the scalar input-secret fraction alone.
@@ -231,13 +234,37 @@ A second CPU-only deterministic harness generated 1,200 synthetic arithmetic tas
 \paragraph{Inference and limits.}
 The test illustrates a concrete integration contract: public templates can be executed on public peers only if the model call's \emph{actual operands} are public; downstream residual private tokens require closure, local execution, or secret sharing. Even zero observed misclassifications on randomized CPU inputs is not a noninterference proof or a measure of an MPC system. Random untrained weights, two small layers, synthetic vectors, no peer-to-peer network and no online/offline cryptography limit the conclusion to causal dependency validation.
 
-\section{What the Combination Adds and How to Validate It}
-\label{sec:future}
-The strongest combined hypothesis is that task rewrites can reduce the number and size of MPC islands \emph{without} user-specific plaintext disclosure, while reuse can amortize the public-program work. Its value will depend on the proportion of tasks with parameterizable public rules, the rate of public-artifact hits, and whether the remaining private operator DAG can actually be partitioned. The two prototypes establish feasibility of their \emph{individual} mechanisms, not the hypothesis itself.
+\section{Matched Rewrite and Island Ablation}
+\label{sec:matched}
+We test whether a task rewrite can reveal public work to a selective operator
+compiler on a fixed execution policy. Each synthetic request computes
+$\sum_{i=1}^{m}(p_i+x)^2$ in $\mathbb{Z}_{2^{64}}$, where $p_i$ is public and
+$x$ is private. In the original graph the client forms $p_i+x$ locally and
+hands off $m$ private operands. The rewritten graph computes
+$\sum_i p_i^2 + 2x\sum_i p_i + mx^2$ with client-side linear fusion. Its
+equality contract follows by distributivity for every ring input.
+We hold the placement of private nonlinear operations fixed to remote 2PC
+to isolate the handoff. An unconstrained client can solve this toy workload
+locally. A compiler with algebraic access to the whole graph could also
+derive the same rewrite.
 
-A proper integrated evaluation should hold model, task set, hardware, and a \emph{single} adversary stage fixed. The minimum factorial design is (i) local-only, (ii) task rewrite + local private binding, (iii) operator-only MPC, (iv) task rewrite + operator MPC without reuse, and (v) task rewrite + operator MPC + reuse/joint planning. Controls must include deterministic tools in local baselines, private-formula tasks, private-token attention, zero/partial/full public fractions, cache poisoning, and forced invalid rewrites. Report end-to-end correctness, secret-egress attempts, WAN delay, peak VRAM, offline triples and time, online rounds/bytes, GPU-seconds, cache hit/false-hit rates, optimization overhead, cost gaps to MILP on small cases, and adversarial failure behavior. Replicate under S1 and S2 separately and do not report a cross-stage speedup without a trust caveat.
-
-The main distinction is the typed handoff: task decomposability alone does not imply public Transformer activations. Both privacy boundaries need testing.
+\paragraph{Paired design and results.}
+We cross rewrite on/off with selective islands on/off on the same 400
+requests ($m\in\{1,4,16,64\}$, 100 requests per width). The CPU emulator
+executes additive sharing with fresh dealer-provided Beaver triples and opens
+two 64-bit ring elements per party per multiplication \cite{beaver}.
+All 1,600 evaluations match the cleartext reference exactly.
+At $m=64$, full MPC and island selection alone each use 64 secure
+multiplications and 2,048 aggregate peer bytes per request. Rewrite alone
+uses 65 multiplications and 2,080 bytes under full MPC. With both passes,
+the public squares leave MPC and 1 multiplication remains (32 bytes).
+The products batch into one opening round in each arm. These counts cover
+peer openings. Client share upload, output reconstruction, preprocessing,
+framing and transport are outside the accounting. The experiment uses a
+seeded in-process emulator and measures logical work on a controlled
+arithmetic graph. The LLM prototype still requires an integrated fixed-stage
+benchmark with matched tasks, hardware, tools, real WAN traffic and
+end-to-end quality.
 
 \section{Related Work}
 Public/private routing approaches such as PPMI, PRISM, MINIM, and agentic privacy-preserving ML specialize disclosure and placement but do not jointly construct reusable parameterized task programs and optimize their residual MPC graphs \cite{ppmi,prism,minim,agenticppml,splitdenoise}. Agentic plan caching and collaborative numerical reasoning relate to the public-program reuse idea, whereas LLMCompiler and equality saturation provide antecedents for typed graph transformations \cite{apc,relaycache,collab,compiler,egg}. Security-aware DAG scheduling, HEFT, and static information-flow control provide placement and typing foundations \cite{secds,heft,sabelfeld,cocoon}. SecretFlow-SPU and MP-SPDZ supply MPC backends; PUMA, BOLT, SOAL, FuseFSS, hybrid CKKS/MPC, and MPCache improve specific secure-inference operations, which can potentially compose with island selection \cite{secretflow,mpspdz,puma,bolt,soal,fusefss,blb,mpcache,cheng}. P2P systems such as Petals, Swarm, and PlanetServe supply deployment motivations rather than a proof of private execution \cite{petals,swarm,planetserve}.
@@ -306,6 +333,7 @@ PriGraph's private-formula contrast makes task rewriting inapplicable when the r
 \bibitem{sabelfeld} Sabelfeld, A., Myers, A.C.: Language-based information-flow security. IEEE JSAC 21(1), 5--19 (2003)
 \bibitem{cocoon} Lamba, A., et al.: Cocoon: Static information flow control in Rust. PACMPL 8(OOPSLA1), 166--193 (2024)
 \bibitem{canetti} Canetti, R.: Security and composition of multiparty cryptographic protocols. Journal of Cryptology 13(1), 143--202 (2000)
+\bibitem{beaver} Beaver, D.: Efficient multiparty protocols using circuit randomization. CRYPTO, 420--432 (1992)
 \bibitem{shamir} Shamir, A.: How to share a secret. Communications of the ACM 22(11), 612--613 (1979)
 \bibitem{bolt} Pang, Q., et al.: BOLT: Privacy-preserving, accurate and efficient inference for transformers. IEEE S\&P, 4753--4771 (2024)
 \bibitem{puma} Dong, Y., et al.: PUMA: Secure inference of LLaMA-7b in five minutes. Security and Safety 4, 2025014 (2025)
