@@ -173,6 +173,60 @@ for placement in ("early", "late"):
             if statistics.median(float(row[key]) for row in group) != qk["summary"][placement][arm]["median_" + key]:
                 raise SystemExit(f"Attention-score median mismatch: {placement}/{arm}/{key}")
 
+composed = json.loads((root / "results/pythia_composed_summary.json").read_text())
+composed_csv = root / "results/pythia_composed_cases.csv"
+if hashlib.sha256(composed_csv.read_bytes()).hexdigest() != composed["raw_sha256"]:
+    raise SystemExit("Composed model archive checksum mismatch.")
+if (composed["model"], composed["revision"], composed["weight_sha256"]) != (
+        head["model"], head["revision"], head["weight_sha256"]):
+    raise SystemExit("Composed model checkpoint differs from the isolated head checkpoint.")
+with composed_csv.open(newline="") as source:
+    composed_rows = list(csv.DictReader(source))
+composed_arms = ("full", "qk_only", "rows_only", "joint", "private_pool")
+composed_keys = {(str(pair), str(prompt), arm) for pair in range(48)
+                 for prompt in range(2) for arm in composed_arms}
+if (len(composed_rows) != 480 or
+        {(row["pair"], row["variant"], row["arm"]) for row in composed_rows} != composed_keys):
+    raise SystemExit("Composed execution archive is incomplete.")
+fingerprints = {}
+for row in composed_rows:
+    prompt = probe[int(row["pair"])]
+    length, prefix = int(row["tokens"]), int(row["approved_prefix"])
+    public_rows = 4 if row["arm"] in ("rows_only", "joint") else 0
+    private_suffix = length if row["arm"] in ("full", "rows_only") else length - prefix
+    products = 64 * private_suffix * (private_suffix + 1) // 2
+    result_bytes = 16 * (public_rows or head["vocab"])
+    input_bytes = 2 * (4 + 4 * public_rows + 8 * head["width"])
+    if ((length, prefix, row["placement"]) != (
+            prompt["sequence_tokens"], prompt["public_prefix_tokens"], prompt["placement"])
+            or tuple(int(row[key]) for key in (
+                "qk_products", "qk_peer_bytes", "qk_dealer_bytes", "qk_client_bytes",
+                "head_bytes", "rows_sent"
+            )) != (products, 32 * products, 48 * products + 26,
+                   32 * 64 * length + 8 * length * (length + 1),
+                   input_bytes + result_bytes, public_rows)
+            or row["reference"] != row["protected"]
+            or not re.fullmatch("[0-9a-f]{64}", row["score_sha256"])):
+        raise SystemExit("Composed model traffic, authorization or correctness mismatch.")
+    key = row["pair"], row["variant"]
+    fingerprint = row["score_sha256"], row["reference"], row["target"]
+    if fingerprints.setdefault(key, fingerprint) != fingerprint:
+        raise SystemExit("Composed policies disagree on a fixed-point candidate vector.")
+for arm in composed_arms:
+    group = [row for row in composed_rows if row["arm"] == arm]
+    expected = {
+        "prompts": len(group),
+        "fp32_choices": sum(row["reference"] == row["protected"] for row in group),
+        "correct_choices": sum(row["target"] == row["protected"] for row in group),
+        "max_abs_logit_error": max(float(row["max_abs_logit_error"]) for row in group),
+        "median_elapsed_ms": statistics.median(int(row["elapsed_ns"]) for row in group) / 1e6,
+        **{f"median_{key}": statistics.median(int(row[key]) for row in group)
+           for key in ("qk_client_bytes", "qk_dealer_bytes", "qk_peer_bytes", "head_bytes")},
+    }
+    if (expected["correct_choices"] != 88 or expected["max_abs_logit_error"] >= 0.01114
+            or composed["summary"][arm] != expected):
+        raise SystemExit(f"Composed model summary or precision mismatch: {arm}")
+
 metadata = subprocess.check_output(["pdfinfo", args.pdf], text=True)
 pages = int(re.search(r"^Pages:\s+(\d+)", metadata, re.MULTILINE)[1])
 if pages > 14:
@@ -192,4 +246,4 @@ if abstract is None:
 words = len(re.findall(r"[\w]+(?:[-,.][\w]+)*", re.sub(r"(\w)-\s*\n\s*", r"\1", abstract[1])))
 if not 150 <= words <= 250:
     raise SystemExit(f"Abstract has {words} words. The template range is 150–250.")
-print(f"PASS: {pages} pages, {words}-word abstract, {len(loopback):,} measured TCP executions, 1,600 emulator evaluations, 720 causal cases, 48 pretrained prompt pairs, 480 protected projections, and 192 attention-score tiles.")
+print(f"PASS: {pages} pages, {words}-word abstract, {len(loopback):,} measured TCP executions, 1,600 emulator evaluations, 720 causal cases, 48 pretrained prompt pairs, 480 protected projections, 192 attention-score tiles, and 480 composed forwards.")

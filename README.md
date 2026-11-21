@@ -55,6 +55,18 @@ python3 experiments/pythia_secure_head.py --checkpoint /path/to/snapshot --outpu
 python3 experiments/pythia_qk_2pc.py --checkpoint /path/to/snapshot --output ./qk-rerun --pairs 24 --warmups 4 --transport tcp
 ```
 
+To compose both boundaries in one forward:
+
+```bash
+TOKENIZERS_PARALLELISM=false python3 experiments/pythia_composed.py --checkpoint /path/to/snapshot --output ./composed-rerun
+```
+
+This run injects reconstructed QK scores before the trusted client's native
+causal softmax and uses the resulting final state for the two-party head.
+It evaluates five policies on each of 96 prompts. All policies use complete
+prefill. The two `pythia_composed_*` archives report per-case counters,
+FP32 and fixed-point matching, per-prompt score digests and timing.
+
 The client constructs both hidden states and distributes only fresh additive
 shares to two TCP loopback processes. A full output mode hides the candidate
 IDs from workers. The four-row mode reveals the IDs under an explicit

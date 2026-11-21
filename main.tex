@@ -41,16 +41,16 @@ multiparty computation (MPC). We evaluate the design on separately reported prot
 benchmarks. In a CPU causal-attention diagnostic, changing private inputs
 changes 2,133 positions that a token-only rule labels public. A pretrained
 Pythia probe confirms that unchanged input tokens after a private field can
-have changed output distributions. We then run private final hidden states
-from Pythia through two non-colluding projection workers. When a four-token
-candidate set is public, restricting the shared output head lowers the
-client payload from 813,064 to 8,296 bytes per prompt while matching all
-96 constrained FP32 choices. A private candidate-set policy retains the full head. A separate interactive
-two-party attention-score test on pretrained activations verifies 40,976
-scores against an exact fixed-point reference. Public-prefix cache reuse preserves the choices but increases local
-prefill time in this workload. An arithmetic ablation separately validates
-the rewrite and placement handoff under a trusted dealer. The results
-characterize scoped execution plans for private language-model outputs.
+have changed output distributions. In a composed Pythia-70M forward, we execute the second layer's selected
+attention scores and the final output projection with two-party workers.
+On 96 synthetic prompts, all five policies preserve every constrained
+FP32 choice. Relative to protecting all operands and returning the full
+head, the joint policy reduces median attention openings from 430,080 to
+77,824 bytes and output-head payload from 813,064 to 8,296 bytes.
+A private candidate set retains full-head traffic. Separate arithmetic
+and operator checks validate exact fixed-point computation. The composed
+benchmark measures a local pipeline with two protected boundaries, with the
+remaining Transformer operations executed on the trusted client.
 \keywords{Decentralized inference \and Privacy \and Graph compilation \and MPC}
 \end{abstract}
 
@@ -304,67 +304,56 @@ ring. The implementation checks a bound that ensures the unshared dot
 products fit in signed 64 bits. No inter-worker messages or dealer
 correlations are needed for this linear operator.
 
-\paragraph{Matched results.}
-Table~\ref{tab:head} crosses prefix reuse with output-row restriction.
-Each of five arms, including the private-pool fallback, yields exactly the
-candidate logits of the corresponding fixed-point local gather. Across all
-480 executions, the selected candidates match the 96 full-prefill FP32
-references in every arm. The underlying FP32 model retrieves the correct
-field value in 88/96 prompts. The maximum absolute score difference
-over all arms is 0.00621. TCP payload includes both workers' shares and
-selector headers. Row restriction lowers it from 813,064 to 8,296 bytes.
-With private candidate IDs, the client sends no IDs and incurs the
-full-width cost. Row restriction alone obtains the same payload reduction
-as the joint arm. A direct local row gather takes about $2\,\mu$s.
-Prefill is slower with reuse for these two-prompt batches.
+\paragraph{Attention-score protocol.}
+For Pythia's second layer, head zero, we take post-RoPE $Q,K$ on the
+client. Policy admits only positions before the earliest private token
+as public. Public--public dot products are clear, mixed dot products
+are linear on shares, and private--private products use fresh
+dealer-assisted Beaver correlations. For length $L$, prefix $p$ and
+head width $d=64$, the causal triangle uses $dL(L+1)/2$ protected
+scalar products with all operands shared and $d(L-p)(L-p+1)/2$
+under selective execution. In isolated tests, 40,976 scores and 480
+candidate projections match the exact ring references. Maximum QK
+error against floating scores is $9.73\times10^{-5}$.
+
+\paragraph{Composed forward and controls.}
+Each input runs the same Pythia forward in five randomized policies.
+The client inserts reconstructed scores into the native causal mask
+and softmax path before the downstream layers. It sends shares of
+the resulting final hidden state to the output workers. We cross
+QK prefix disclosure with authorized head-row restriction, and add
+the same prompts with a private candidate-pool policy. We use complete
+prefill for every policy. Prefix KV reuse was slower on the isolated
+two-prompt microbenchmark. Both phases use pre-established TCP
+loopback connections. Timings include preprocessing for attention,
+model execution and client reconstruction. Model loading, process
+and socket setup and reference checks are outside the timer.
+
+All 480 runs reproduce the fixed-point QK and candidate-projection
+references. The five policies return identical quantized candidate
+scores on each prompt. Their constrained top-1 agrees with all 96
+unmodified FP32 comparisons, and all policies recover 88 of 96 known
+fields. The maximum absolute candidate score error is below 0.01114.
+Table~\ref{tab:composed} reports both stages' traffic separately.
+QK client input and output payload have a median of 44,320 bytes in
+every arm. The private-pool policy preserves the attention
+saving and sends no candidate IDs, returning a full head instead.
+The row-only arm achieves most of the elapsed-time reduction on this
+host. Offloading is a deployment constraint. A direct local projection
+remains faster than either TCP projection in the isolated head test.
 
 \begin{table}[t]
 \centering
-\caption{Pythia-70M head over TCP loopback. Every arm evaluates the same 96
-prompts. Projection time and trusted prefill time are medians per prompt
-and per prompt pair, respectively.}
-\label{tab:head}
+\caption{Composed Pythia-70M forward with one protected attention head and
+a protected output head. Each policy evaluates the same 96 prompts.
+Values are medians per prompt on TCP loopback.}
+\label{tab:composed}
 \small\renewcommand{\arraystretch}{1.12}\setlength{\tabcolsep}{5pt}
 \begin{tabular}{@{}lrrrr@{}}
 \toprule
-Policy & Rows & Payload (B) & Project ($\mu$s) & Prefill (ms)\\
+Policy & QK peer (B) & Dealer (B) & Head (B) & Elapsed (ms)\\
 \midrule
-\input{figures/head-rows}
-\end{tabular}
-\end{table}
-
-\paragraph{Interactive attention scores.}
-On the same 96 prompts, we extract one head's post-RoPE $Q,K$ on the
-client at Pythia's second layer. The extracted scores reproduce the
-eager attention probabilities before quantization. Compare sharing all
-operands with disclosing the policy-approved causal prefix. In the selective
-arm, public--public dot products are clear, mixed dot products are linear
-on shares, and two private operands use dealer-assisted Beaver products.
-For length $L$, public prefix $p$ and head width $d=64$, the causal
-triangle requires $dL(L+1)/2$ protected scalar products with all operands
-shared and $d(L-p)(L-p+1)/2$ with selective execution.
-
-The 192 TCP executions reproduce all 40,976 evaluated scores exactly
-in the fixed-point ring, with maximum absolute scaled error
-$9.73\times10^{-5}$ against the floating reference. At equal inputs and
-protocol, the median peer payload falls from 430,080 bytes to 186,368 for
-the early private field and to 20,480 for the late field
-(Table~\ref{tab:qk}). Client payload is unchanged. The dealer carries
-the additional correlations and is measured separately. The client
-reconstructs the causal tile. Score reconstruction, softmax and the
-output-head evaluation are separate boundaries in the experiments.
-
-\begin{table}[t]
-\centering
-\caption{Pretrained Pythia second-layer causal scores over TCP. Values are
-medians per prompt. Each placement has 48 prompts in each arm.}
-\label{tab:qk}
-\small\renewcommand{\arraystretch}{1.12}\setlength{\tabcolsep}{5pt}
-\begin{tabular}{@{}llrrrr@{}}
-\toprule
-Field & Policy & Products & Peer (B) & Dealer (B) & Online ($\mu$s)\\
-\midrule
-\input{figures/qk-rows}
+\input{figures/composed-rows}
 \end{tabular}
 \end{table}
 

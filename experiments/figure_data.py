@@ -62,10 +62,21 @@ def plot_tables():
                       ("beaver_multiplications", "peer_payload_bytes", "dealer_bytes")]
             values.append(f"{row['median_online_us']:.1f}")
             qk_rows.append(" & ".join((placement.title(), title, *values)) + r" \\")
+    pipeline = json.loads((ROOT / "results/pythia_composed_summary.json").read_text())["summary"]
+    composed_rows = []
+    for label, arm in (("All-shared QK / full head", "full"), ("Selective QK only", "qk_only"),
+                       ("Head rows only", "rows_only"), ("Joint", "joint"),
+                       ("Joint, private pool", "private_pool")):
+        row = pipeline[arm]
+        values = [f"{row['median_' + key]:.0f}" for key in
+                  ("qk_peer_bytes", "qk_dealer_bytes", "head_bytes")]
+        values.append(f"{row['median_elapsed_ms']:.2f}")
+        composed_rows.append(" & ".join((label, *values)) + r" \\")
     return {
         "causal-sweep.dat": "\n".join(causal_rows) + "\n",
         "ablation-sweep.dat": "\n".join(ablation_rows) + "\n",
         "qk-rows.tex": "\n".join(qk_rows + [r"\bottomrule"]) + "\n",
+        "composed-rows.tex": "\n".join(composed_rows + [r"\bottomrule"]) + "\n",
         "head-rows.tex": "\n".join(head_rows + [r"\bottomrule"]) + "\n",
         "matched-rows.tex": "\n".join(matched_rows + [r"\bottomrule"]) + "\n",
     }

@@ -1,0 +1,70 @@
+{
+  "model": "EleutherAI/pythia-70m-deduped",
+  "revision": "e93a9faa9c77e5d09219f6c868bfc7a1bd65593c",
+  "weight_sha256": "3da388330e4549156d76b58d6d268c63cd005e9336b4f4d2d378421e7b7a33fd",
+  "raw_sha256": "6a83c990a652944231097543d203a5daac0c8a041320bfc202dbde29c94048bf",
+  "summary": {
+    "full": {
+      "prompts": 96,
+      "fp32_choices": 96,
+      "correct_choices": 88,
+      "max_abs_logit_error": 0.011130549013614655,
+      "median_elapsed_ms": 14.030604,
+      "median_qk_client_bytes": 44320.0,
+      "median_qk_dealer_bytes": 645146.0,
+      "median_qk_peer_bytes": 430080.0,
+      "median_head_bytes": 813064.0
+    },
+    "qk_only": {
+      "prompts": 96,
+      "fp32_choices": 96,
+      "correct_choices": 88,
+      "max_abs_logit_error": 0.011130549013614655,
+      "median_elapsed_ms": 13.2641455,
+      "median_qk_client_bytes": 44320.0,
+      "median_qk_dealer_bytes": 116762.0,
+      "median_qk_peer_bytes": 77824.0,
+      "median_head_bytes": 813064.0
+    },
+    "rows_only": {
+      "prompts": 96,
+      "fp32_choices": 96,
+      "correct_choices": 88,
+      "max_abs_logit_error": 0.011130549013614655,
+      "median_elapsed_ms": 5.7077085,
+      "median_qk_client_bytes": 44320.0,
+      "median_qk_dealer_bytes": 645146.0,
+      "median_qk_peer_bytes": 430080.0,
+      "median_head_bytes": 8296.0
+    },
+    "joint": {
+      "prompts": 96,
+      "fp32_choices": 96,
+      "correct_choices": 88,
+      "max_abs_logit_error": 0.011130549013614655,
+      "median_elapsed_ms": 4.957875,
+      "median_qk_client_bytes": 44320.0,
+      "median_qk_dealer_bytes": 116762.0,
+      "median_qk_peer_bytes": 77824.0,
+      "median_head_bytes": 8296.0
+    },
+    "private_pool": {
+      "prompts": 96,
+      "fp32_choices": 96,
+      "correct_choices": 88,
+      "max_abs_logit_error": 0.011130549013614655,
+      "median_elapsed_ms": 13.2426665,
+      "median_qk_client_bytes": 44320.0,
+      "median_qk_dealer_bytes": 116762.0,
+      "median_qk_peer_bytes": 77824.0,
+      "median_head_bytes": 813064.0
+    }
+  },
+  "platform": "macOS-26.5.2-arm64-arm-64bit",
+  "torch": "2.8.0",
+  "transformers": "4.52.4",
+  "numpy": "2.0.2",
+  "threads": 2,
+  "warmups_per_arm": 2,
+  "transport": "TCP loopback"
+}

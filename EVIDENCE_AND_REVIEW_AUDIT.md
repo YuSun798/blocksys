@@ -186,3 +186,28 @@ output bytes are 40,960 and 3,360 in every cell. Timings include one extra
 eight-byte counter per worker, omitted from the payload columns. The QK
 results and output-head results are separately measured operator boundaries.
 Do not multiply their ratios or infer a complete full-model speedup.
+
+## Composed Pythia forward
+
+The integrated probe replaces one Pythia second-layer causal score tile
+with reconstructed fixed-point values and immediately consumes those values
+in the real model's softmax, value aggregation, and residual path. It sends
+the resulting final state as shares to the output-head workers. The client
+runs the remaining Transformer and reconstructs both protected boundaries.
+The benchmark uses the same 96 single-prompt prefills, two separate pairs
+of local TCP worker processes, five randomized policies, and two warmups
+per policy. Timings include attention preprocessing and both reconstructions
+and exclude initial model and connection setup and correctness checks.
+
+All 480 candidate vectors agree with the corresponding integer references.
+Across all five policies the archived candidate digests agree exactly per
+prompt. Top-1 matches the unmodified FP32 path in 96/96 prompts per policy.
+The absolute maximum candidate-logit deviation is 0.011131. Each policy
+gets 88/96 target tokens. Median attention peer payload is 430,080 B for
+all-shared QK and 77,824 B for selective QK. Dealer payload is 645,146 B
+and 116,762 B respectively. Public four-row authorization lowers head
+payload from 813,064 B to 8,296 B. The private-pool control returns the full
+head while retaining selective QK. Elapsed medians of 14.03 ms and 4.96 ms
+compare two offloaded policies on this host. The result is scoped to one
+selected attention head and a constrained output head with the rest of the
+model local, semi-honest workers, a trusted client/dealer, and no WAN claim.
