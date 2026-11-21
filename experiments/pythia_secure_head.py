@@ -38,7 +38,7 @@ ARMS = (
 )
 
 
-def projection_party(path, channel):
+def projection_party(path, channel, one_way_s=0):
     with channel:
         channel.settimeout(TIMEOUT)
         matrix = np.load(path, mmap_mode="r", allow_pickle=False)
@@ -49,18 +49,20 @@ def projection_party(path, channel):
             indices = np.frombuffer(receive(channel, count * ROW_IDS.itemsize), dtype=ROW_IDS)
             hidden = np.frombuffer(receive(channel, matrix.shape[1] * WORD_BYTES), dtype=WORDS)
             scores = (matrix[indices] if count else matrix) @ hidden
+            if one_way_s:
+                time.sleep(one_way_s)
             channel.sendall(scores.astype(WORDS, copy=False).tobytes())
 
 
 @contextmanager
-def projection_workers(matrix):
+def projection_workers(matrix, one_way_s=0):
     with tempfile.TemporaryDirectory(prefix="pythia-public-head-") as scratch:
         path = Path(scratch) / "head.npy"
         np.save(path, matrix, allow_pickle=False)
         ctx = mp.get_context("spawn")
         pairs = [tcp_pair() for _ in range(2)]
         clients = [left for left, _ in pairs]
-        workers = [ctx.Process(target=projection_party, args=(path, right))
+        workers = [ctx.Process(target=projection_party, args=(path, right, one_way_s))
                    for _, right in pairs]
         try:
             for worker in workers:
@@ -85,7 +87,7 @@ def projection_workers(matrix):
                 raise RuntimeError(f"projection workers failed: {failures}")
 
 
-def project(channels, hidden, candidates, vocab, restrict, pool_public):
+def project(channels, hidden, candidates, vocab, restrict, pool_public, one_way_s=0):
     requested = candidates if restrict and pool_public else ()
     count = len(requested)
     started = time.perf_counter_ns()
@@ -93,6 +95,8 @@ def project(channels, hidden, candidates, vocab, restrict, pool_public):
     mask = np.frombuffer(secrets.token_bytes(hidden.nbytes), dtype=WORDS)
     selector = COUNT.pack(count) + np.asarray(requested, dtype=ROW_IDS).tobytes()
     upload = sum(len(selector) + hidden.nbytes for _ in channels)
+    if one_way_s:
+        time.sleep(one_way_s)
     for channel, share in zip(channels, (mask, hidden - mask)):
         channel.sendall(selector + share.astype(WORDS, copy=False).tobytes())
     reply_size = (count or vocab) * WORD_BYTES

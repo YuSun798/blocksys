@@ -1,0 +1,41 @@
+[
+  {
+    "rtt_ms": 0,
+    "prompts": 96,
+    "paired_ratio": 2.966,
+    "median_ms": {
+      "full": 13.996,
+      "joint": 4.698
+    },
+    "paired_increment_ms": {
+      "full": 0.0,
+      "joint": 0.0
+    }
+  },
+  {
+    "rtt_ms": 5,
+    "prompts": 96,
+    "paired_ratio": 1.398,
+    "median_ms": {
+      "full": 51.216,
+      "joint": 36.573
+    },
+    "paired_increment_ms": {
+      "full": 36.972,
+      "joint": 31.866
+    }
+  },
+  {
+    "rtt_ms": 20,
+    "prompts": 96,
+    "paired_ratio": 1.181,
+    "median_ms": {
+      "full": 146.533,
+      "joint": 124.428
+    },
+    "paired_increment_ms": {
+      "full": 132.323,
+      "joint": 119.672
+    }
+  }
+]

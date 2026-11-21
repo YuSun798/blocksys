@@ -55,7 +55,7 @@ def causal_cells(length, public_prefix):
     return rows, cols, cols >= public_prefix
 
 
-def score_worker(index, control, peer):
+def score_worker(index, control, peer, one_way_s=0):
     with control, peer:
         control.settimeout(TIMEOUT)
         peer.settimeout(TIMEOUT)
@@ -66,6 +66,8 @@ def score_worker(index, control, peer):
             rows, cols, private_products = causal_cells(length, public_prefix)
             count = int(private_products.sum()) * width
             a, b, c = receive_words(control, 3 * count).reshape(3, count)
+            if one_way_s:
+                time.sleep(one_way_s)
             control.sendall(b"R")
             q, k = receive_words(control, 2 * length * width).reshape(2, length, width)
 
@@ -73,10 +75,14 @@ def score_worker(index, control, peer):
             masked = np.stack((left.reshape(-1) - a, right.reshape(-1) - b))
             packet = serialize(masked)
             if index == 0:
+                if one_way_s and packet:
+                    time.sleep(one_way_s)
                 peer.sendall(packet)
                 opened = receive_words(peer, 2 * count).reshape(2, count)
             else:
                 opened = receive_words(peer, 2 * count).reshape(2, count)
+                if one_way_s and packet:
+                    time.sleep(one_way_s)
                 peer.sendall(packet)
             d, e = masked + opened
             product_shares = c + d * b + e * a
@@ -89,11 +95,13 @@ def score_worker(index, control, peer):
             # alone contributes the fully public score when the query is public.
             local = (cols < public_prefix) & ((rows >= public_prefix) | (index == 0))
             out[local] = (q[rows[local]] * k[cols[local]]).sum(axis=1)
+            if one_way_s:
+                time.sleep(one_way_s)
             control.sendall(serialize(out) + COUNTER.pack(len(packet)))
 
 
 @contextmanager
-def workers(transport):
+def workers(transport, one_way_s=0):
     pair = tcp_pair if transport == "tcp" else socket.socketpair
     p0_link, p1_link = pair()
     client0, control0 = pair()
@@ -101,8 +109,8 @@ def workers(transport):
     channels = client0, client1
     ctx = mp.get_context("spawn")
     parties = (
-        ctx.Process(target=score_worker, args=(0, control0, p0_link)),
-        ctx.Process(target=score_worker, args=(1, control1, p1_link)),
+        ctx.Process(target=score_worker, args=(0, control0, p0_link, one_way_s)),
+        ctx.Process(target=score_worker, args=(1, control1, p1_link, one_way_s)),
     )
     try:
         for worker in parties:
@@ -127,7 +135,7 @@ def workers(transport):
                     raise RuntimeError(f"score worker failed with exit code {worker.exitcode}")
 
 
-def evaluate_scores(channels, qk, public_prefix):
+def evaluate_scores(channels, qk, public_prefix, one_way_s=0):
     _, length, width = qk.shape
     rows, _, private_products = causal_cells(length, public_prefix)
     n_scores = len(rows)
@@ -137,6 +145,8 @@ def evaluate_scores(channels, qk, public_prefix):
     prep_start = time.perf_counter_ns()
     a, b = uniform((2, count))
     prep = additive_shares(np.stack((a, b, a * b)))
+    if one_way_s:
+        time.sleep(one_way_s)
     for channel, share in zip(channels, prep):
         channel.sendall(header + serialize(share))
     for channel in channels:
@@ -149,6 +159,8 @@ def evaluate_scores(channels, qk, public_prefix):
     left = first.copy()
     left[:, :public_prefix] = qk[:, :public_prefix]
     right[:, :public_prefix] = qk[:, :public_prefix]
+    if one_way_s:
+        time.sleep(one_way_s)
     for channel, values in zip(channels, (left, right)):
         channel.sendall(serialize(values))
     result0, bytes0 = read_result(channels[0], n_scores)

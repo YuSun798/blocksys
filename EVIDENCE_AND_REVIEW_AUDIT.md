@@ -223,3 +223,17 @@ four RTTs and use the measured loopback elapsed time as the starting point.
 The paired ratios are medians of individual full-to-joint ratios.
 This model does not measure cross-host performance, change the security
 assumptions, or simulate TCP congestion or concurrent traffic.
+
+
+## Controlled TCP delay
+
+Full and joint policies execute the same 96 prompts at each of three
+nominal RTTs, with simulated one-way propagation implemented by sender
+waits on real TCP loopback sockets. Each client fan-out incurs one wait.
+Each independent worker delays its return, and peer openings are ordered.
+The measured ratios decrease with the configured delay. The measured
+increments exceed the ideal four-RTT increase on this host, so the
+analytical serialized link estimates and the application delay experiment
+are reported separately. The archive checker verifies all 576 keys,
+unchanged payloads per policy, identical per-prompt score digests and
+the timing summary.

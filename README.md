@@ -125,3 +125,11 @@ traces. The replay uses a four-RTT dependency term and application-byte
 serialization across either a shared bottleneck or equal-capacity parallel
 client links. These are modeled scenarios based on measured payloads and
 loopback time.
+
+
+For the controlled TCP delay experiment, run
+`python3 experiments/delay_sweep.py --checkpoint /path/to/snapshot --output ./delay-rerun`.
+The launcher waits at message send boundaries and measures real local
+protocol executions at three nominal delays. Timing depends on the host.
+Use `python3 experiments/delay_sweep.py --check --output experiments/results`
+to validate coverage, paired output and payload stability, and summaries.

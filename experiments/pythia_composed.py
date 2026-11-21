@@ -30,7 +30,7 @@ ARMS = {
 
 
 @contextmanager
-def replace_scores(target, channels, prefix, traces):
+def replace_scores(target, channels, prefix, traces, one_way_s=0):
     eager = neox.eager_attention_forward
 
     def mixed(module, query, key, value, attention_mask, scaling, dropout=0., head_mask=None, **kwargs):
@@ -43,7 +43,7 @@ def replace_scores(target, channels, prefix, traces):
         length, width = signed.shape[1:]
         if int(np.abs(signed[0]).max()) * int(np.abs(signed[1]).max()) * width >= 1 << 63:
             raise ValueError("signed fixed-point bound exceeded")
-        restored, counts = evaluate_scores(channels, signed.view(np.uint64), prefix)
+        restored, counts = evaluate_scores(channels, signed.view(np.uint64), prefix, one_way_s)
         ri, ci = np.tril_indices(length)
         rest = [index for index in range(query.shape[1]) if index != HEAD]
         scores = query.new_zeros((1, query.shape[1], length, length))
@@ -67,7 +67,8 @@ def replace_scores(target, channels, prefix, traces):
 
 
 @torch.inference_mode()
-def run(checkpoint):
+def run(checkpoint, one_way_s=0, arms=None):
+    arms = tuple(ARMS if arms is None else arms)
     verify_checkpoint(checkpoint)
     torch.set_num_threads(2)
     tokenizer = AutoTokenizer.from_pretrained(checkpoint, local_files_only=True)
@@ -83,7 +84,7 @@ def run(checkpoint):
     prompts = list(matched_prompts(tokenizer))
     rng = random.Random(711)
     cases = []
-    with workers("tcp") as score_channels, projection_workers(weight_int) as head_channels:
+    with workers("tcp", one_way_s) as score_channels, projection_workers(weight_int, one_way_s) as head_channels:
         for pair_id, (record, placement, _, prefix, pair) in enumerate([prompts[0], *prompts], -1):
             ids = choices[record].numpy()
             selected_weight = weight[ids]
@@ -93,21 +94,21 @@ def run(checkpoint):
                 expected_hidden = body(inputs, use_cache=False).last_hidden_state[0, -1].numpy()
                 expected_logits = selected_weight @ expected_hidden
                 target = int(inputs[0, prefix])
-                order = list(ARMS)
+                order = list(arms)
                 rng.shuffle(order)
                 fingerprints = set()
                 for arm in order:
                     use_prefix, send_rows = ARMS[arm]
                     trace = []
                     start = time.perf_counter_ns()
-                    with replace_scores(layer, score_channels, prefix if use_prefix else 0, trace):
+                    with replace_scores(layer, score_channels, prefix if use_prefix else 0, trace, one_way_s):
                         last = body(inputs, use_cache=False).last_hidden_state[0, -1].numpy()
                     hidden = quantize(last)
                     if int(np.abs(hidden).max()) * max_weight * hidden.size >= 1 << 63:
                         raise ValueError("head projection exceeds signed range")
                     logits, upload, download, rows_sent, _ = project(
                         head_channels, hidden, ids, weight_int.shape[0],
-                        send_rows or arm == "private_pool", arm != "private_pool")
+                        send_rows or arm == "private_pool", arm != "private_pool", one_way_s)
                     elapsed = time.perf_counter_ns() - start
                     if len(trace) != 1:
                         raise ValueError("must execute exactly one protected QK tile")

@@ -324,16 +324,13 @@ the resulting final hidden state to the output workers. We cross
 QK prefix disclosure with authorized head-row restriction, and add
 the same prompts with a private candidate-pool policy. We use complete
 prefill for every policy. Prefix KV reuse was slower on the isolated
-two-prompt microbenchmark. Both phases use pre-established TCP
-loopback connections. Timings include preprocessing for attention,
-model execution and client reconstruction. Model loading, process
-and socket setup and reference checks are outside the timer.
+two-prompt microbenchmark. Over established loopback sockets, timings include attention
+preprocessing, model execution and reconstruction. Setup and reference
+checks are excluded.
 
 All 480 runs reproduce the fixed-point QK and candidate-projection
-references. The five policies return identical quantized candidate
-scores on each prompt. Their constrained top-1 agrees with all 96
-unmodified FP32 comparisons, and all policies recover 88 of 96 known
-fields. The maximum absolute candidate score error is below 0.01114.
+references. The five policies yield identical candidate scores, match all 96
+constrained FP32 choices and recover 88 known fields. The maximum absolute candidate score error is below 0.01114.
 Table~\ref{tab:composed} reports both stages' traffic separately.
 QK client input and output payload have a median of 44,320 bytes in
 every arm. The private-pool policy preserves the attention
@@ -357,25 +354,28 @@ Policy & QK peer (B) & Dealer (B) & Head (B) & Elapsed (ms)\\
 \end{tabular}
 \end{table}
 
-\paragraph{Network sensitivity from measured traces.}
-We replay each composed request with an analytical transport overlay
-$T_{\mathrm{loopback}}+4R+8B/C$, where $R$ is round-trip latency, $B$
-is the application byte count and $C$ is link bit rate. Eight ordered
-one-way dependencies cover dealer delivery and ACK, QK input, two
-sequential peer openings, QK output, head input and head output.
-This charges all bytes to one shared bottleneck, including dealer
-traffic. For a parallel-link variant, symmetric client-side traffic
-(including dealer messages) is split across two equal-capacity links;
-the ordered openings still use the full peer byte count. We sweep
-$R\in\{1,10,40\}$ ms and $C\in\{10,100,1000\}$ Mbit/s on the same 96
-paired traces. At 100 Mbit/s on the shared link, the median paired
-full-to-joint ratio falls from 6.52 at 1 ms RTT to 1.72 at 40 ms.
-At 40 ms and 1 Gbit/s it is 1.13. In the parallel-link variant the
-corresponding ratios are 5.37, 1.48 and 1.10. Both policies have the
-same ordered dependencies, so propagation erodes the ratio even when
-payload savings persist. The overlay models serialization and dependency
-delays on top of loopback measurements. It omits congestion, loss,
-TCP window effects and concurrent requests.
+\paragraph{Network sensitivity.}
+For each of the 96 paired traces we add $4R+8B/C$ to loopback time,
+where $R$ is RTT, $B$ is application bytes and $C$ is bit rate.
+Four RTTs cover dealer delivery and acknowledgment, QK client
+traffic, ordered peer openings and head traffic. On a shared link
+we serialize all bytes. On two parallel client links we halve
+symmetric client traffic and retain the full peer payload.
+Across the 18 settings ($R=1,10,40$ ms, $C=10,100,1000$ Mbit/s),
+the median paired ratio at 100 Mbit/s on the shared link falls
+from 6.52 at 1 ms to 1.72 at 40 ms, and to 1.13 at 40 ms and
+1 Gbit/s. Parallel links yield 5.37, 1.48 and 1.10 respectively.
+The model omits congestion, loss and TCP window effects.
+
+\paragraph{Controlled propagation delay.}
+For the same 96 prompts we inject half-RTT sender waits at ordered
+transfers over TCP loopback, once per client fan-out. Across 576 full
+and joint runs, scores and per-policy payloads remain identical.
+At nominal RTTs of 0, 5 and 20 ms, paired ratios are 2.97, 1.40 and
+1.18. At 20 ms, full and joint medians are 146.53 and 124.43 ms.
+Their paired increments (132.32 and 119.67 ms) exceed the 80 ms
+ideal term. These measurements include timer and scheduling overhead
+on the loopback host.
 
 \section{Related Work}
 Public/private routing approaches such as PPMI, PRISM, MINIM, and agentic privacy-preserving ML specialize disclosure and placement but do not jointly construct reusable parameterized task programs and optimize their residual MPC graphs \cite{ppmi,prism,minim,agenticppml,splitdenoise}. APC reuses adaptable plan templates and collaborative numerical reasoning reconstructs local answers from remote-generated patterns. LLMCompiler and equality saturation provide antecedents for graph-level optimization \cite{apc,relaycache,collab,compiler,egg}. HEFT and static information-flow control provide placement and typing foundations \cite{heft,sabelfeld,cocoon}. SecretFlow-SPU and MP-SPDZ provide MPC backends. Systems including PUMA, BOLT, SOAL, FuseFSS, BLB, and MPCache optimize secure inference operations that can compose with island selection \cite{secretflow,mpspdz,puma,bolt,soal,fusefss,blb,mpcache,cheng}. P2P systems such as Petals, Swarm, and PlanetServe supply deployment motivations rather than a proof of private execution \cite{petals,swarm,planetserve}.
