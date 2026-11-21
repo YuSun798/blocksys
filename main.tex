@@ -41,9 +41,10 @@ private attention products. In a matched experiment with 48 synthetic
 inputs and five policies, the rewrite reduces mean two-party attention-opening
 payload from 206,848 to 25,600 bytes relative to operator selection on
 the original layout. A manually reordered control achieves the same
-traffic. The rewrite changes one of 48 four-way decisions. For each
+traffic. For each
 layout, every protected decision matches its own floating-point
-reference. A separate 96-prompt ablation measures disclosure at the
+reference; the rewritten layout repeats 48 of 48 fields correctly,
+against 47 for the original. A separate 96-prompt ablation measures disclosure at the
 attention boundary and the final output projection. The experiments
 protect one attention head and the output projection under trusted-dealer,
 semi-honest two-party computation. Other Transformer operations execute
@@ -73,6 +74,16 @@ implements the handoff for typed records, automatically selects a layout
 using its protected QK product count, and compares it with operator-only,
 rewrite-only, and hand-written controls.
 
+Our contributions are: (1) a typed interface that carries disclosure
+policy and provenance from task rewrites to operator closure, with boundary
+checks B1--B3 and a conditional non-egress argument; (2) evidence from
+random and pretrained Transformers that the public prefix, not the private
+fraction, bounds what operator selection can move out of MPC; (3) a matched
+arithmetic benchmark showing that rewriting and island selection interact;
+and (4) a restricted compiler for typed records that chooses a layout in
+Pythia-70M and cuts two-party attention payload relative to
+operator-only selection.
+
 \section{Threat Model and Execution Semantics}
 \paragraph{Participants and disclosure.}
 A trusted client owns user context $X_u$ and authorizes specific disclosures.
@@ -93,6 +104,16 @@ worker in a fixed pair. The experiment uses unauthenticated TCP loopback
 on one trusted host. ShareRoute uses a separate Semi2k backend for its 2PC
 results. The 3PC design assumes independent trust domains and at most one
 corrupted party.
+
+\paragraph{Cohort selection.}
+Open participation is where non-collusion is hardest to justify, so the
+corruption bound must come from how workers are chosen, not from the
+protocol. Candidate mechanisms include stake- or reputation-weighted
+sampling, assigning workers from distinct operators or jurisdictions, and
+hardware attestation as an additional layer. If both S1 workers, or two of
+three S2 parties, collude, they recover the protected values. A planner
+that cannot verify cohort independence must treat the remote plan as
+unavailable and execute locally. We do not evaluate cohort selection.
 
 \section{Hierarchical Privacy Graph Compiler}
 The reasoning compiler first generates a typed task DAG $\Gt=(V_t,E_t)$. Each node has an operation, input/output schemas, sensitivity, capability requirements, cost profile, and optional executable validator. An admissible typed rewrite produces $\Gtnew\in\mathcal{R}(\Gt)$; the operator compiler then traces the selected LLM invocations into $\Go=(V_o,E_o)$ and links each invocation's inputs to task-graph outputs. The joined plan retains edge provenance from both layers. Figure~\ref{fig:arch} distinguishes compilation stages and runtime paths.
@@ -203,7 +224,7 @@ and operator choices change its work on matched requests.
 Does labeling only the \emph{secret token positions} correctly identify the states that must be kept out of plaintext P2P execution? We ran a CPU diagnostic using PyTorch 2.10 and reproduced its counts on Apple Silicon with PyTorch 2.8: a randomly initialized, frozen, two-layer causal Transformer ($d=32$, four heads, FFN width 64, sequence length 16). It uses dense masked self-attention, LayerNorm and GELU; \emph{it is not the pretrained GPT-2 or cryptographic mini-GPT used by ShareRoute}. We varied the 0/25/50/75/100\% private-input fractions and three secret placements (prefix, suffix, uniformly sampled interleaving). With four model seeds and 12 perturbations/cell, this yields $5\times3\times4\times12=720$ paired input executions. Each pair changes only secret-position vectors; 16 output states are compared per pair. The source and raw per-case CSV are included in the repository, along with the command to repeat the test.
 
 \paragraph{Results.}
-The first secret fixes the public prefix under dense causal attention. Across 11,520 comparisons, every state labeled public by Eq.~\eqref{eq:prefix} stayed at or below the $10^{-6}$ drift threshold. Every state labeled private-dependent changed under the tested perturbations. A naive detector treating all non-secret input positions as public missed 2,133 changed output positions across the same 720 pairs. At 25\% secret tokens, putting secrets at the \emph{end} leaves 75\% of states public, putting them at the \emph{beginning} leaves none public, and randomly interleaving them leaves only 15.0\% public on average. The pattern holds without any MPC implementation or assumed communication-cost model: disclosure safety cannot be inferred from the scalar input-secret fraction alone.
+The first secret fixes the public prefix under dense causal attention. Across 11,520 comparisons, every state labeled public by Eq.~\eqref{eq:prefix} stayed at or below the $10^{-6}$ drift threshold. Every state labeled private-dependent changed under the tested perturbations. A naive detector treating all non-secret input positions as public missed 2,133 changed output positions across the same 720 pairs. At 25\% secret tokens, putting secrets at the \emph{end} leaves 75\% of states public, putting them at the \emph{beginning} leaves none public, and randomly interleaving them leaves only 15.0\% public on average. The pattern holds without any MPC implementation or assumed communication-cost model: disclosure safety cannot be inferred from the scalar input-secret fraction alone. The labelling rule itself follows from the causal mask; the test checks the implementation and quantifies what a position-only labeller would leak.
 
 Figure~\ref{fig:causal-sweep} extends the comparison across all tested
 private fractions. The public-output fraction computed from sampled dependency labels tracks the analytic expectation from Eq.~\eqref{eq:prefix} and the public-gap
@@ -460,12 +481,22 @@ numerical reasoning reuses remote code for local answers. APC caches task
 plans, while RelayCaching reuses decoding KV state~\cite{collab,apc,relaycache}.
 LLMCompiler, equality saturation, HEFT and information-flow control inform
 the graph representation and scheduling~\cite{compiler,egg,heft,sabelfeld,cocoon}.
+CaMeL derives an agent's control flow from trusted input and keeps untrusted
+data from influencing it~\cite{camel}. This split resembles our public
+program and local binding, but it targets prompt injection rather than
+confidentiality towards serving peers. Prefix caching in vLLM and SGLang
+reuses plaintext computation over shared prefixes~\cite{vllm,sglang}; under
+dense causal attention, the same public prefix bounds what selective
+execution can move out of MPC.
 
 Marill reduces MPC work by adapting the model during fine-tuning~\cite{marill}.
 Our design targets changes in the dependency graph of a fixed model
 after a task rewrite. SecretFlow-SPU and MP-SPDZ provide MPC backends.
-PUMA, BOLT, SOAL, FuseFSS, BLB and MPCache study protocol or cache
-costs for secure inference~\cite{secretflow,mpspdz,puma,bolt,soal,fusefss,blb,mpcache}.
+Iron, MPCFormer, BumbleBee, PUMA, BOLT, SOAL, FuseFSS, BLB and MPCache
+study protocol, approximation or cache costs for secure Transformer
+inference~\cite{secretflow,mpspdz,iron,mpcformer,bumblebee,puma,bolt,soal,fusefss,blb,mpcache}.
+Trusted execution environments, including confidential GPUs, offer a
+different trust model that we do not evaluate.
 Petals and PlanetServe study distributed inference. SWARM studies
 training across heterogeneous workers~\cite{petals,planetserve,swarm}.
 
@@ -519,5 +550,11 @@ measurements come from executable evaluations and their archived records.
 \bibitem{splitdenoise} Mai, P., et al.: Split-and-denoise: Protect large language model inference with local differential privacy. ICML (2024)
 \bibitem{relaycache} Geng, Y., Gao, Y., Wu, W., Liu, G., Liu, J.: RelayCaching: Accelerating LLM collaboration via decoding KV cache reuse. ICML, pp. 34524--34543 (2026)
 \bibitem{marill} Rathee, D., Li, D., Stoica, I., Zhang, H., Popa, R.: MPC-minimized secure LLM inference. arXiv:2408.03561 (2024)
+\bibitem{camel} Debenedetti, E., et al.: Defeating prompt injections by design. arXiv:2503.18813 (2025)
+\bibitem{vllm} Kwon, W., et al.: Efficient memory management for large language model serving with PagedAttention. SOSP (2023)
+\bibitem{sglang} Zheng, L., et al.: SGLang: Efficient execution of structured language model programs. NeurIPS (2024)
+\bibitem{iron} Hao, M., et al.: Iron: Private inference on Transformers. NeurIPS (2022)
+\bibitem{mpcformer} Li, D., et al.: MPCFormer: Fast, performant and private Transformer inference with MPC. ICLR (2023)
+\bibitem{bumblebee} Lu, W., et al.: BumbleBee: Secure two-party inference framework for large transformers. NDSS (2025)
 \end{thebibliography}
 \end{document}
