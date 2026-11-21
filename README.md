@@ -2,7 +2,7 @@
 
 **Paper:** *Cross-Layer Privacy Compilation for Decentralized LLM Inference*
 **Main file:** [`main.tex`](main.tex), official BlockSys 2027 `llncs.cls` v2.25, with figures in `figures/`.
-**Status:** research manuscript with causal diagnostics and a trusted-dealer TCP loopback evaluation of the composed arithmetic schedule. Full private LLM deployment remains an evaluation target.
+**Status:** research manuscript with causal diagnostics, a trusted-dealer arithmetic evaluation and a two-party Pythia output-head experiment. Full private LLM deployment remains an evaluation target.
 
 ## Contents
 
@@ -45,6 +45,30 @@ python3 experiments/local_lm_quality.py --checkpoint /path/to/snapshot --output 
 This CPU test compares next-token probability vectors on synthetic records
 under two private-field placements. It also checks prefix KV reuse against
 complete plaintext prefill.
+
+## Reproduce the Pythia operator experiments
+
+Use the same pinned checkpoint as above and NumPy 2.0.2:
+
+```bash
+python3 experiments/pythia_secure_head.py --checkpoint /path/to/snapshot --output ./head-rerun
+python3 experiments/pythia_qk_2pc.py --checkpoint /path/to/snapshot --output ./qk-rerun --pairs 24 --warmups 4 --transport tcp
+```
+
+The client constructs both hidden states and distributes only fresh additive
+shares to two TCP loopback processes. A full output mode hides the candidate
+IDs from workers. The four-row mode reveals the IDs under an explicit
+public-pool policy. Archived per-prompt and grouped evidence is in
+`experiments/results/pythia_head_cases.csv` and `pythia_head_summary.json`.
+Report application payload and scoped timing separately. Pretrained weights
+are obtained from the pinned checkpoint and are not included in the repo.
+The attention-score test uses one Pythia head in the second layer. The
+trusted client captures post-RoPE inputs and supplies fresh Beaver triples.
+Both arms evaluate the same causal triangle. The selective arm exposes
+only the approved prefix and computes mixed products on shares.
+`pythia_qk_cases.csv` and `pythia_qk_summary.json` record 192 executed tiles.
+Projection and QK are separate operator tests. Neither runs softmax or the
+Transformer body over the two-party workers.
 
 ## Reproduce the matched rewrite × island ablation
 

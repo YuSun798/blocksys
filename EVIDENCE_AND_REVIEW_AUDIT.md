@@ -139,3 +139,50 @@ threshold. Prefix cache reuse maintains all 1,928 top-1 predictions and
 max TV is 0.001099. This demonstrates a dependency and cache behavior with
 pretrained weights. It is a single-checkpoint plaintext diagnostic on
 synthetic prompts, with no transport, secure attention, or quality benchmark.
+
+## Two-party pretrained output projection
+
+The same 48 Pythia prompt pairs are evaluated using complete trusted prefill
+or one cached public prefix per pair. For each prompt the client splits its
+final fixed-point hidden vector into two uniform additive shares. Two TCP
+loopback processes apply the public head locally. Row selection is an
+output-contract specialization. It discloses four candidate IDs only in
+the authorized public-pool arms. In the counterfactual private-pool policy
+the same model, tokens and IDs are used but the client uploads no selector
+IDs, receives full shares, and performs the selection itself.
+
+All 480 executions match their same-input local fixed-point gather on the
+four candidate scores. The reconstructed constrained top-1 matches FP32
+in all five arms, 96/96 per arm. Both protocols inherit the underlying
+model's 88/96 correct field tokens. Maximum error over candidate logits is
+0.0062002, including any cached-prefix kernel difference. Total client
+application payload is 813,064 bytes for a full output and 8,296 bytes for
+four authorized rows. There are no inter-worker messages.
+Pruning alone reaches the same payload as the joint schedule. A local
+four-row gather is faster, and prefix reuse increases prefill latency for
+these short two-prompt batches. This is a conditional offload comparison
+with stable public rows, not evidence for system-wide speedup, open-vocabulary
+generation, an offloaded Transformer body, or a private row-selection protocol.
+
+## Interactive attention-score follow-up
+
+The second layer, head 0, uses native pretrained Pythia-70M post-RoPE query
+and key vectors. Captured scores reproduce eager attention probabilities
+before quantization. Both arms execute the same causal triangle on the same
+96 prompts. Under a trusted client/dealer and semi-honest non-collusion, the
+all-shared arm uses Beaver multiplication for every coordinate. The
+selective arm discloses the approved causal prefix, computes mixed products
+linearly on shares, and uses fresh Beaver correlations only for the private
+suffix block. Actual independent workers communicate over pre-established
+localhost TCP sockets. No future-token score, softmax, autoregressive
+decoding, or full-layer secure execution is benchmarked.
+
+The 40,976 fixed-point scores reconstructed across 192 tiles match exactly.
+The maximum scaled error against the floating reference is 9.7271e-5.
+Median opening traffic is 430,080 bytes in either all-shared cell, 186,368
+for early selective, and 20,480 for late selective. Median dealer traffic
+is 645,146, 279,578 and 30,746 bytes respectively. Median client upload and
+output bytes are 40,960 and 3,360 in every cell. Timings include one extra
+eight-byte counter per worker, omitted from the payload columns. The QK
+results and output-head results are separately measured operator boundaries.
+Do not multiply their ratios or infer a complete full-model speedup.

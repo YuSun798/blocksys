@@ -1,0 +1,83 @@
+{
+  "model": "EleutherAI/pythia-70m-deduped",
+  "revision": "e93a9faa9c77e5d09219f6c868bfc7a1bd65593c",
+  "weight_sha256": "3da388330e4549156d76b58d6d268c63cd005e9336b4f4d2d378421e7b7a33fd",
+  "torch": "2.8.0",
+  "transformers": "4.52.4",
+  "scale": 65536,
+  "layer_index": 1,
+  "head_index": 0,
+  "raw_sha256": "0fdd096f6b7c9850ad4ef0ea4d3d4d55d2a30b4ca7b848ce6f158ef2a5c99051",
+  "numpy": "2.0.2",
+  "python": "3.9.6",
+  "platform": "macOS-26.5.2-arm64-arm-64bit",
+  "transport": "TCP loopback",
+  "trusted_client_dealer": true,
+  "ring_bits": 64,
+  "processes": 2,
+  "prompt_pairs_per_placement": 24,
+  "warmups_per_arm": 4,
+  "score_protocol": "additive sharing with dealer-assisted Beaver multiplication",
+  "summary": {
+    "early": {
+      "all_shared": {
+        "prompts": 48,
+        "exact_ring": 48,
+        "causal_scores": 10244,
+        "max_abs_score_error": 9.083478426941127e-05,
+        "max_reference_attention_error": 0.0,
+        "median_beaver_multiplications": 13440.0,
+        "median_peer_payload_bytes": 430080.0,
+        "median_client_upload_bytes": 40960.0,
+        "median_client_output_bytes": 3360.0,
+        "median_dealer_bytes": 645146.0,
+        "median_preprocessing_us": 1113.2505,
+        "median_online_us": 350.3125
+      },
+      "selective": {
+        "prompts": 48,
+        "exact_ring": 48,
+        "causal_scores": 10244,
+        "max_abs_score_error": 9.083478426941127e-05,
+        "max_reference_attention_error": 0.0,
+        "median_beaver_multiplications": 5824.0,
+        "median_peer_payload_bytes": 186368.0,
+        "median_client_upload_bytes": 40960.0,
+        "median_client_output_bytes": 3360.0,
+        "median_dealer_bytes": 279578.0,
+        "median_preprocessing_us": 549.146,
+        "median_online_us": 281.979
+      }
+    },
+    "late": {
+      "all_shared": {
+        "prompts": 48,
+        "exact_ring": 48,
+        "causal_scores": 10244,
+        "max_abs_score_error": 9.727077655696803e-05,
+        "max_reference_attention_error": 0.0,
+        "median_beaver_multiplications": 13440.0,
+        "median_peer_payload_bytes": 430080.0,
+        "median_client_upload_bytes": 40960.0,
+        "median_client_output_bytes": 3360.0,
+        "median_dealer_bytes": 645146.0,
+        "median_preprocessing_us": 1118.3125,
+        "median_online_us": 353.4375
+      },
+      "selective": {
+        "prompts": 48,
+        "exact_ring": 48,
+        "causal_scores": 10244,
+        "max_abs_score_error": 9.727077655696803e-05,
+        "max_reference_attention_error": 0.0,
+        "median_beaver_multiplications": 640.0,
+        "median_peer_payload_bytes": 20480.0,
+        "median_client_upload_bytes": 40960.0,
+        "median_client_output_bytes": 3360.0,
+        "median_dealer_bytes": 30746.0,
+        "median_preprocessing_us": 170.27100000000002,
+        "median_online_us": 236.83350000000002
+      }
+    }
+  }
+}

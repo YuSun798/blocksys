@@ -1,8 +1,10 @@
 """Rerun the matched ablation and verify measured counts and LNCS page limit."""
 import argparse
 import csv
+import hashlib
 import json
 import re
+import statistics
 import subprocess
 from pathlib import Path
 
@@ -92,6 +94,85 @@ if (sum(row["prefix_reuse_argmax_matches"] for row in probe) != 1928
         or round(max(row["prefix_reuse_max_tv"] for row in probe), 5) != 0.00110):
     raise SystemExit("Unexpected Pythia prefix reuse result.")
 
+head = json.loads((root / "results/pythia_head_summary.json").read_text())
+head_cases = root / "results/pythia_head_cases.csv"
+if hashlib.sha256(head_cases.read_bytes()).hexdigest() != head["raw_sha256"]:
+    raise SystemExit("Head trial archive checksum does not match.")
+with head_cases.open(newline="") as source:
+    head_rows = list(csv.DictReader(source))
+head_arms = ("full", "reuse", "rows", "joint", "private_pool")
+head_keys = {(str(case), str(prompt), arm) for case in range(48)
+             for prompt in range(2) for arm in head_arms}
+if len(head_rows) != 480 or {(row["case"], row["prompt"], row["arm"]) for row in head_rows} != head_keys:
+    raise SystemExit("Head archive must contain all 480 unique cases.")
+if (head["vocab"], head["width"], head["fixed_scale"]) != (50304, 512, 65536):
+    raise SystemExit("Unexpected pretrained projection dimensions or fixed-point scale.")
+for arm in head_arms:
+    public_rows = 4 if arm in ("rows", "joint") else 0
+    scores_returned = public_rows or head["vocab"]
+    upload = 2 * (4 + 4 * public_rows + 8 * head["width"])
+    download = 2 * 8 * scores_returned
+    group = [row for row in head_rows if row["arm"] == arm]
+    if any(tuple(int(row[key]) for key in (
+            "rows_sent", "projection_rows", "upload_bytes", "download_bytes", "peer_bytes", "exact_ring"
+            )) != (public_rows, scores_returned, upload, download, 0, 1)
+           or row["output_top1"] != row["reference_top1"] for row in group):
+        raise SystemExit(f"Head correctness, disclosure or traffic mismatch: {arm}")
+    expected = {
+        "exact_ring": 96, "fp32_argmax": 96, "target_exact": 88, "fp32_target_exact": 88,
+        "prompts": len(group), "projection_rows": scores_returned, "rows_sent": public_rows,
+        "upload_bytes": upload, "download_bytes": download, "peer_bytes": 0,
+        "max_abs_logit_error": max(float(row["max_abs_logit_error"]) for row in group),
+        "median_projection_us": round(statistics.median(int(row["projection_ns"])
+                                                         for row in group) / 1000, 2),
+        "median_prefill_pair_ms": round(statistics.median(int(row["prefill_pair_ns"])
+                                    for row in group if row["prompt"] == "0") / 1e6, 3),
+    }
+    if (sum(row["output_top1"] == row["target"] for row in group) != 88
+            or expected["max_abs_logit_error"] >= 0.00621
+            or any(head["summary"][arm][key] != value for key, value in expected.items())):
+        raise SystemExit(f"Head accuracy, drift or median summary mismatch: {arm}")
+
+qk = json.loads((root / "results/pythia_qk_summary.json").read_text())
+qk_cases = root / "results/pythia_qk_cases.csv"
+if hashlib.sha256(qk_cases.read_bytes()).hexdigest() != qk["raw_sha256"]:
+    raise SystemExit("Attention-score archive checksum does not match.")
+if (qk["transport"], qk["prompt_pairs_per_placement"], qk["layer_index"],
+        qk["head_index"], qk["scale"]) != ("TCP loopback", 24, 1, 0, 65536):
+    raise SystemExit("Unexpected attention-score design.")
+with qk_cases.open(newline="") as source:
+    qk_rows = list(csv.DictReader(source))
+qk_keys = {(str(pair), placement, str(prompt), arm) for pair in range(24)
+           for placement in ("early", "late") for prompt in range(2)
+           for arm in ("all_shared", "selective")}
+if (len(qk_rows) != 192 or
+        {(row["pair_id"], row["placement"], row["variant"], row["arm"])
+         for row in qk_rows} != qk_keys or
+        sum(int(row["causal_scores"]) for row in qk_rows) != 40976):
+    raise SystemExit("Attention-score archive is incomplete.")
+for row in qk_rows:
+    case = probe[2 * int(row["pair_id"]) + (row["placement"] == "late")]
+    length, prefix = int(row["tokens"]), int(row["public_prefix_tokens"])
+    residual = length if row["arm"] == "all_shared" else length - prefix
+    products = 64 * residual * (residual + 1) // 2
+    scores = length * (length + 1) // 2
+    if ((length, prefix, row["record"], row["placement"]) != (
+            case["sequence_tokens"], case["public_prefix_tokens"], case["record"], case["placement"])
+            or tuple(int(row[key]) for key in (
+                "exact_ring", "causal_scores", "beaver_multiplications", "peer_payload_bytes",
+                "client_upload_bytes", "client_output_bytes", "dealer_bytes"
+            )) != (1, scores, products, 32 * products, 32 * 64 * length,
+                   16 * scores, 48 * products + 26)
+            or float(row["max_abs_score_error"]) > 9.73e-5
+            or float(row["reference_attention_error"]) > 1e-6):
+        raise SystemExit("Attention-score correctness or traffic mismatch.")
+for placement in ("early", "late"):
+    for arm in ("all_shared", "selective"):
+        group = [row for row in qk_rows if (row["placement"], row["arm"]) == (placement, arm)]
+        for key in ("beaver_multiplications", "peer_payload_bytes", "dealer_bytes", "online_us"):
+            if statistics.median(float(row[key]) for row in group) != qk["summary"][placement][arm]["median_" + key]:
+                raise SystemExit(f"Attention-score median mismatch: {placement}/{arm}/{key}")
+
 metadata = subprocess.check_output(["pdfinfo", args.pdf], text=True)
 pages = int(re.search(r"^Pages:\s+(\d+)", metadata, re.MULTILINE)[1])
 if pages > 14:
@@ -111,4 +192,4 @@ if abstract is None:
 words = len(re.findall(r"[\w]+(?:[-,.][\w]+)*", re.sub(r"(\w)-\s*\n\s*", r"\1", abstract[1])))
 if not 150 <= words <= 250:
     raise SystemExit(f"Abstract has {words} words. The template range is 150–250.")
-print(f"PASS: {pages} pages, {words}-word abstract, {len(loopback):,} measured TCP executions, 1,600 emulator evaluations, 720 causal cases, and 48 pretrained prompt pairs.")
+print(f"PASS: {pages} pages, {words}-word abstract, {len(loopback):,} measured TCP executions, 1,600 emulator evaluations, 720 causal cases, 48 pretrained prompt pairs, 480 protected projections, and 192 attention-score tiles.")

@@ -1,6 +1,7 @@
 """Derive the plotted values from the archived CPU results."""
 import argparse
 import csv
+import json
 from pathlib import Path
 
 from loopback_2pc import WIDTHS
@@ -43,9 +44,29 @@ def plot_tables():
         values = [trial[key] for key in ("secure_products", "peer_bytes", "client_bytes",
                                         "offline_bytes", "online_median_us", "cold_median_us")]
         matched_rows.append(" & ".join((name, *values)) + r" \\")
+    head = json.loads((ROOT / "results/pythia_head_summary.json").read_text())["summary"]
+    head_rows = []
+    for title, arm in (("Full output", "full"), ("Prefix reuse", "reuse"),
+                       ("Rows only", "rows"), ("Joint", "joint"),
+                       ("Joint, private pool", "private_pool")):
+        row = head[arm]
+        values = (row["projection_rows"], row["upload_bytes"] + row["download_bytes"],
+                  row["median_projection_us"], row["median_prefill_pair_ms"])
+        head_rows.append(" & ".join((title, *(str(value) for value in values))) + r" \\")
+    scores = json.loads((ROOT / "results/pythia_qk_summary.json").read_text())["summary"]
+    qk_rows = []
+    for placement in ("early", "late"):
+        for title, arm in (("All shared", "all_shared"), ("Selective", "selective")):
+            row = scores[placement][arm]
+            values = [f"{row['median_' + key]:.0f}" for key in
+                      ("beaver_multiplications", "peer_payload_bytes", "dealer_bytes")]
+            values.append(f"{row['median_online_us']:.1f}")
+            qk_rows.append(" & ".join((placement.title(), title, *values)) + r" \\")
     return {
         "causal-sweep.dat": "\n".join(causal_rows) + "\n",
         "ablation-sweep.dat": "\n".join(ablation_rows) + "\n",
+        "qk-rows.tex": "\n".join(qk_rows + [r"\bottomrule"]) + "\n",
+        "head-rows.tex": "\n".join(head_rows + [r"\bottomrule"]) + "\n",
         "matched-rows.tex": "\n".join(matched_rows + [r"\bottomrule"]) + "\n",
     }
 
