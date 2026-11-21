@@ -1,8 +1,10 @@
 # Cross-Layer Privacy Compilation — BlockSys 2027
 
-**Paper:** *Cross-Layer Privacy Compilation for Decentralized LLM Inference*
+**Paper:** *From Task Rewriting to Selective Two-Party LLM Inference*
 **Main file:** [`main.tex`](main.tex), official BlockSys 2027 `llncs.cls` v2.25, with figures in `figures/`.
-**Status:** research manuscript with causal diagnostics, a trusted-dealer arithmetic evaluation and a two-party Pythia output-head experiment. Full private LLM deployment remains an evaluation target.
+**Status:** research manuscript with causal diagnostics, a trusted-dealer
+arithmetic ablation, two protected Pythia operators and an executable typed
+rewrite that selects their operating policy for synthetic records.
 
 ## Contents
 
@@ -82,6 +84,24 @@ only the approved prefix and computes mixed products on shares.
 Projection and QK are separate operator tests. Neither runs softmax or the
 Transformer body over the two-party workers.
 
+## Reproduce the matched Pythia rewrite study
+
+Use the pinned Pythia snapshot and environment described above.
+
+```bash
+TOKENIZERS_PARALLELISM=false python3 experiments/cross_layer_rewrite.py --checkpoint /path/to/snapshot --output ./rewrite-rerun --transport tcp
+python3 experiments/check_cross_layer_evidence.py ./rewrite-rerun/cross_layer_rewrite_cases.csv --summary ./rewrite-rerun/cross_layer_rewrite_summary.json --transport tcp
+```
+
+Twelve record schemas and four bound values per schema yield 48 matched
+inputs. The rule lifts a public note over a private field when the schema
+permits it. The planner minimizes the number of private QK products.
+The four factorial arms and independently written public-first control
+use the same four public output rows. The archive reports
+protected-request elapsed time and per-schema planning time separately.
+The checker recomputes traffic and paired outcomes and validates the
+summary. Raw fingerprints and target IDs describe synthetic inputs.
+
 ## Reproduce the matched rewrite × island ablation
 
 Run from the repository root with Python 3.9+:
@@ -112,9 +132,12 @@ python3 experiments/check_manuscript_evidence.py main.pdf
 
 GitHub pushes do not automatically update an Overleaf project unless a separate synchronization is configured. In an Overleaf project connected to `YuSun798/blocksys`: **Integrations > GitHub > Pull GitHub changes**, then compile `main.tex` with pdfLaTeX. If no connection exists, import the GitHub repo into a new Overleaf project. This README does not claim an Overleaf pull happened.
 
-## Remaining essential research work
+## Evaluation scope
 
-A proper end-to-end claim requires a real integrated compiler and MPC backend, identical task/model/hardware configurations, fixed S1/S2 adversary stages, WAN measurements, deterministic-tool local baselines, privacy and correctness controls, calibration of the joint cost model, and ablations of rewrite, reuse, operator islands, and protocol selection.
+The executable planner handles an order-insensitive record rewrite, a
+fixed trusted-dealer protocol and two protected operator boundaries. A
+general compiler, planning with cache and heterogeneous placement costs,
+full-model generation and cross-host timing remain separate evaluations.
 
 
 ### Reproduce the network sensitivity model

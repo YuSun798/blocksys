@@ -1,0 +1,130 @@
+{
+  "model": "EleutherAI/pythia-70m-deduped",
+  "revision": "e93a9faa9c77e5d09219f6c868bfc7a1bd65593c",
+  "weight_sha256": "3da388330e4549156d76b58d6d268c63cd005e9336b4f4d2d378421e7b7a33fd",
+  "platform": "macOS-26.5.2-arm64-arm-64bit",
+  "torch": "2.8.0",
+  "transformers": "4.52.4",
+  "numpy": "2.0.2",
+  "threads": 2,
+  "layer_index": 1,
+  "head_index": 0,
+  "ring_bits": 64,
+  "scale": 65536,
+  "transport": "TCP loopback",
+  "templates_disjoint_from_probe": 12,
+  "candidates_per_template": 4,
+  "warmup_requests_per_arm": 4,
+  "all_qk_and_head_outputs_exact_ring": true,
+  "head_row_policy": "same four authorized rows in every arm",
+  "scheme": "typed public-note lift, QK placement ablation, and manual public-first baseline",
+  "typed_contract_refusals": {
+    "private_note_templates": 12,
+    "order_sensitive_templates": 12
+  },
+  "operator_only_vs_joint": {
+    "same_fp32_choices": 47,
+    "same_protected_choices": 47,
+    "same_fixed_point_scores": 0,
+    "correct_to_incorrect": 0,
+    "incorrect_to_correct": 1
+  },
+  "summary": {
+    "full": {
+      "prompts": 48,
+      "layouts": {
+        "original": 48
+      },
+      "fp32_correct": 47,
+      "protected_correct": 47,
+      "fp32_agreement": 48,
+      "max_abs_logit_error": 0.0033051215577870607,
+      "median_elapsed_ms": 6.1499375,
+      "median_schema_planning_ms": 0.2233115,
+      "mean_tokens": 21.583333333333332,
+      "mean_selected_prefix_tokens": 0,
+      "mean_qk_products": 15717.333333333334,
+      "mean_qk_peer_bytes": 502954.6666666667,
+      "mean_qk_dealer_bytes": 754458,
+      "mean_qk_client_bytes": 48132,
+      "mean_head_bytes": 8296
+    },
+    "operator_only": {
+      "prompts": 48,
+      "layouts": {
+        "original": 48
+      },
+      "fp32_correct": 47,
+      "protected_correct": 47,
+      "fp32_agreement": 48,
+      "max_abs_logit_error": 0.0033051215577870607,
+      "median_elapsed_ms": 5.345771,
+      "median_schema_planning_ms": 0.2233115,
+      "mean_tokens": 21.583333333333332,
+      "mean_selected_prefix_tokens": 7.916666666666667,
+      "mean_qk_products": 6464,
+      "mean_qk_peer_bytes": 206848,
+      "mean_qk_dealer_bytes": 310298,
+      "mean_qk_client_bytes": 48132,
+      "mean_head_bytes": 8296
+    },
+    "rewrite_only": {
+      "prompts": 48,
+      "layouts": {
+        "rewritten": 48
+      },
+      "fp32_correct": 48,
+      "protected_correct": 48,
+      "fp32_agreement": 48,
+      "max_abs_logit_error": 0.004414112539961934,
+      "median_elapsed_ms": 6.221125,
+      "median_schema_planning_ms": 0.205291,
+      "mean_tokens": 21.583333333333332,
+      "mean_selected_prefix_tokens": 0,
+      "mean_qk_products": 15717.333333333334,
+      "mean_qk_peer_bytes": 502954.6666666667,
+      "mean_qk_dealer_bytes": 754458,
+      "mean_qk_client_bytes": 48132,
+      "mean_head_bytes": 8296
+    },
+    "joint": {
+      "prompts": 48,
+      "layouts": {
+        "rewritten": 48
+      },
+      "fp32_correct": 48,
+      "protected_correct": 48,
+      "fp32_agreement": 48,
+      "max_abs_logit_error": 0.004414112539961934,
+      "median_elapsed_ms": 4.8723745,
+      "median_schema_planning_ms": 0.377645,
+      "mean_tokens": 21.583333333333332,
+      "mean_selected_prefix_tokens": 17.083333333333332,
+      "mean_qk_products": 800,
+      "mean_qk_peer_bytes": 25600,
+      "mean_qk_dealer_bytes": 38426,
+      "mean_qk_client_bytes": 48132,
+      "mean_head_bytes": 8296
+    },
+    "manual": {
+      "prompts": 48,
+      "layouts": {
+        "manual": 48
+      },
+      "fp32_correct": 48,
+      "protected_correct": 48,
+      "fp32_agreement": 48,
+      "max_abs_logit_error": 0.004414112539961934,
+      "median_elapsed_ms": 4.872542,
+      "median_schema_planning_ms": 0.203687,
+      "mean_tokens": 21.583333333333332,
+      "mean_selected_prefix_tokens": 17.083333333333332,
+      "mean_qk_products": 800,
+      "mean_qk_peer_bytes": 25600,
+      "mean_qk_dealer_bytes": 38426,
+      "mean_qk_client_bytes": 48132,
+      "mean_head_bytes": 8296
+    }
+  },
+  "raw_sha256": "ebffb275b057aa33f9ba81ae24bc7d621db1de48d78ad160f8a211c9481d1aa0"
+}

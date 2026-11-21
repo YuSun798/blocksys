@@ -18,8 +18,8 @@ jobs:
       - name: Verify revised manuscript root
         run: |
           test -s main.tex
-          grep -Fq 'Cross-Layer Privacy Compilation for Decentralized LLM Inference' main.tex
-          grep -Fq 'Matched Rewrite and Island Ablation' main.tex
+          grep -Fq 'From Task Rewriting to Selective Two-Party LLM Inference' main.tex
+          grep -Fq 'Compiling a Task Rewrite into Protected Pythia' main.tex
           grep -Fq 'version 2.25' llncs.cls
       - name: Compile Springer LNCS manuscript
         uses: xu-cheng/latex-action@v3
@@ -38,6 +38,7 @@ jobs:
           python3 experiments/loopback_2pc.py --trials 3 --warmup 1 --output "$RUNNER_TEMP/loopback-smoke"
           python3 experiments/network_sensitivity.py --check
           python3 experiments/delay_sweep.py --check --output experiments/results
+          python3 experiments/check_cross_layer_evidence.py experiments/results/cross_layer_rewrite_cases.csv --summary experiments/results/cross_layer_rewrite_summary.json --transport tcp
           python3 experiments/figure_data.py --check
           python3 experiments/check_manuscript_evidence.py main.pdf
       - name: Upload the PDF

@@ -72,11 +72,25 @@ def plot_tables():
                   ("qk_peer_bytes", "qk_dealer_bytes", "head_bytes")]
         values.append(f"{row['median_elapsed_ms']:.2f}")
         composed_rows.append(" & ".join((label, *values)) + r" \\")
+    compiled = json.loads((ROOT / "results/cross_layer_rewrite_summary.json").read_text())["summary"]
+    compiled_rows = []
+    for label, arm in (("Original, all shared", "full"), ("Original, selective", "operator_only"),
+                       ("Rewrite, all shared", "rewrite_only"), ("Automatic + selective", "joint"),
+                       ("Manual + selective", "manual")):
+        row = compiled[arm]
+        total = sum(row["mean_" + key] for key in
+                    ("qk_peer_bytes", "qk_dealer_bytes", "qk_client_bytes", "head_bytes"))
+        values = (f"{row['mean_selected_prefix_tokens']:.2f}",
+                  f"{row['mean_qk_peer_bytes'] / 1000:,.1f}",
+                  f"{total / 1000:,.1f}", f"{row['median_elapsed_ms']:.2f}",
+                  f"{row['protected_correct']}/{row['prompts']}")
+        compiled_rows.append(" & ".join((label, *values)) + r" \\")
     return {
         "causal-sweep.dat": "\n".join(causal_rows) + "\n",
         "ablation-sweep.dat": "\n".join(ablation_rows) + "\n",
         "qk-rows.tex": "\n".join(qk_rows + [r"\bottomrule"]) + "\n",
         "composed-rows.tex": "\n".join(composed_rows + [r"\bottomrule"]) + "\n",
+        "cross-layer-rows.tex": "\n".join(compiled_rows + [r"\bottomrule"]) + "\n",
         "head-rows.tex": "\n".join(head_rows + [r"\bottomrule"]) + "\n",
         "matched-rows.tex": "\n".join(matched_rows + [r"\bottomrule"]) + "\n",
     }

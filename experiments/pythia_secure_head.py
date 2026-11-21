@@ -12,6 +12,7 @@ import multiprocessing as mp
 import platform
 import random
 import secrets
+import socket
 import statistics
 import struct
 import tempfile
@@ -55,12 +56,13 @@ def projection_party(path, channel, one_way_s=0):
 
 
 @contextmanager
-def projection_workers(matrix, one_way_s=0):
+def projection_workers(matrix, one_way_s=0, transport="tcp"):
     with tempfile.TemporaryDirectory(prefix="pythia-public-head-") as scratch:
         path = Path(scratch) / "head.npy"
         np.save(path, matrix, allow_pickle=False)
         ctx = mp.get_context("spawn")
-        pairs = [tcp_pair() for _ in range(2)]
+        pair = tcp_pair if transport == "tcp" else socket.socketpair
+        pairs = [pair() for _ in range(2)]
         clients = [left for left, _ in pairs]
         workers = [ctx.Process(target=projection_party, args=(path, right, one_way_s))
                    for _, right in pairs]

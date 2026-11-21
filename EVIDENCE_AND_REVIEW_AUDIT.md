@@ -237,3 +237,33 @@ analytical serialized link estimates and the application delay experiment
 are reported separately. The archive checker verifies all 576 keys,
 unchanged payloads per policy, identical per-prompt score digests and
 the timing summary.
+
+
+## Matched task rewrite in a pretrained forward
+
+The executable record compiler checks all four allowed bindings before
+accepting either serialization. It verifies the same typed contents and
+token multisets for the two layouts, and per-layout invariant prefix and
+shape. It refuses to lift a private note or a note in an order-sensitive
+schema. The compiled plan minimizes private QK products under the same
+head-row policy. The tested placements use one fixed dealer-assisted
+backend with TCP loopback on the M4 host.
+
+The archived experiment covers 12 new schemas × 4 bound values × 5
+configurations, or 240 protected executions. The length is equal per
+matched request. The two all-shared arms have identical byte counts.
+For selective QK the mean prefix increases from 7.92 to 17.08 tokens,
+mean QK peer openings move from 206,848 to 25,600 bytes, and mean
+total application payload from 573,574 to 120,454 bytes. The median
+paired ratios are 4.67 for total bytes and 1.10 for protected request
+elapsed time. Median comparison of candidate layouts adds a separate
+0.38 ms compilation measurement per schema. Manual public-first
+serialization produces the same layout, traffic, and fixed-point outputs.
+
+Both protected boundaries match the integer references in all 240 runs.
+Constrained FP32 decisions match within each layout. The original
+layout answers 47 of 48 and the lifted layout 48 of 48. All 48
+cross-layout fixed-point score digests differ. The single changed
+decision is wrong-to-correct on these synthetic field-repetition tasks.
+The independent archive checker recomputes payloads and paired outcomes
+and checks plan selection, shape invariance and the reported summary.
