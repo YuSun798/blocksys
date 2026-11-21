@@ -1,19 +1,22 @@
 \begin{tikzpicture}
 \begin{axis}[width=11.5cm,height=5.0cm,
-  xmode=log,log basis x=4,xmin=.82,xmax=78,ymin=-2,ymax=71,
-  xtick={1,4,16,64},xticklabels={1,4,16,64},
-  ytick={0,16,32,48,64},
-  xlabel={Public terms per request},ylabel={Secure products per request},
+  xmode=log,log basis x=2,xmin=3.4,xmax=152,ymin=0,
+  xtick={4,16,64,128},xticklabels={4,16,64,128},
+  xlabel={Terms per request},ylabel={Median online time ($\mu$s)},
   legend style={font=\footnotesize,at={(.025,.98)},anchor=north west,
                 draw=none,fill=white,cells={anchor=west}},
   tick label style={font=\footnotesize},label style={font=\small},
   ymajorgrids,grid style={black!13},axis line style={black!65},
-  every axis plot/.append style={semithick,mark size=2.4pt}]
-\addplot[routeSecure,dashed,mark=square,mark size=3.2pt] table[x=width,y=rewrite]{figures/ablation-sweep.dat};
-\addlegendentry{Rewrite only}
+  every axis plot/.append style={semithick,mark size=2.3pt}]
 \addplot[routeLocal,mark=*] table[x=width,y=full]{figures/ablation-sweep.dat};
-\addlegendentry{Full MPC and islands only}
-\addplot[routePublic,densely dotted,mark=triangle*] table[x=width,y=combined]{figures/ablation-sweep.dat};
-\addlegendentry{Rewrite and islands}
+\addlegendentry{All squares in 2PC}
+\addplot[routeLocal,dashed,mark=o,mark size=3.0pt] table[x=width,y=islands]{figures/ablation-sweep.dat};
+\addlegendentry{Islands only}
+\addplot[routeSecure,densely dotted,mark=square,mark size=3.3pt] table[x=width,y=rewrite]{figures/ablation-sweep.dat};
+\addlegendentry{Rewrite only}
+\addplot[routePublic,mark=triangle*] table[x=width,y=joint]{figures/ablation-sweep.dat};
+\addlegendentry{Joint}
+\addplot[black,dashed,mark=diamond,mark size=3.1pt] table[x=width,y=algebra]{figures/ablation-sweep.dat};
+\addlegendentry{Hand-written algebra}
 \end{axis}
 \end{tikzpicture}

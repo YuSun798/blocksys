@@ -30,6 +30,7 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y poppler-utils
+          python3 experiments/loopback_2pc.py --trials 3 --warmup 1 --output "$RUNNER_TEMP/loopback-smoke"
           python3 experiments/figure_data.py --check
           python3 experiments/check_manuscript_evidence.py main.pdf
       - name: Upload the PDF

@@ -2,19 +2,21 @@
 
 **Paper:** *Cross-Layer Privacy Compilation for Decentralized LLM Inference*
 **Main file:** [`main.tex`](main.tex), official BlockSys 2027 `llncs.cls` v2.25, with figures in `figures/`.
-**Status:** research manuscript with two CPU diagnostics; **not** a deployed or fully benchmarked combined MPC system.
+**Status:** research manuscript with causal diagnostics and a trusted-dealer TCP loopback evaluation of the composed arithmetic schedule. Full private LLM deployment remains an evaluation target.
 
 ## Contents
 
 - `main.tex`: submission manuscript. It juxtaposes the results from PriGraph and ShareRoute, with method/assumption boundaries and a new CPU causal-privacy test.
+- `experiments/local_lm_quality.py`: pretrained Pythia-70M end-position dependence and public-KV reuse diagnostic, with results in `experiments/results/pythia_probe.json`.
 - `experiments/causal_privacy_cpu.py`: pure-CPU reproducible PyTorch diagnostic and deterministic arithmetic contract tests.
 - `experiments/results/summary.json`: summary of observed tests and hardware.
 - `experiments/results/aggregate.csv`: per-placement/per-private-fraction means and counts.
 - `experiments/results/case_results.csv`: 720 per-case position-dependency measurements.
-- `experiments/rewrite_island_cpu.py`: paired, fixed-policy rewrite × island experiment with an in-process two-party ring emulator. Results are under `experiments/results/rewrite_island.json`.
+- `experiments/loopback_2pc.py`: paired rewrite × island experiment and algebraic baseline with two worker processes over TCP loopback. Per-case and grouped results are under `experiments/results/loopback_*.csv`.
+- `experiments/rewrite_island_cpu.py`: earlier deterministic in-process ring emulator, retained for regression checking.
 - `EVIDENCE_AND_REVIEW_AUDIT.md`: source-derived results, confounders, and experiments still needed before claiming top-conference-level systems evidence.
 
-The two **original, unmodified PDFs** are preserved in the downloadable ZIP delivered in the conversation; this repository does not contain them.
+The original PriGraph and ShareRoute PDFs are source manuscripts supplied by the authors and are not included in this repository.
 
 ## Reproduce the new CPU diagnostic
 
@@ -29,20 +31,35 @@ The reported run used PyTorch `2.10.0+cpu` and 5 available AMD EPYC vCPUs (the s
 
 **Interpretation caveat:** the `private suffix`, `private prefix` and `interleaved` cases compare *positions* at equal private input fraction. A downstream nominally public token can depend on a prior secret via causal attention. The experiment exercises randomly initialized two-layer d=32 attention; it does not reproduce ShareRoute's MP-SPDZ arithmetic, GPT-2 weight values, or PriGraph's Qwen2.5 task metrics.
 
-## Reproduce the matched rewrite × island ablation
+## Reproduce the pretrained plaintext probe
 
-Run from the repository root with Python 3.10+:
+Install PyTorch 2.8.0 and Transformers 4.52.4. Download or locate the
+`EleutherAI/pythia-70m-deduped` snapshot at commit
+`e93a9faa9c77e5d09219f6c868bfc7a1bd65593c`. The script requires the
+safetensors version and checks its weight digest before loading.
 
 ```bash
-python3 experiments/rewrite_island_cpu.py --output experiments/results/rewrite_island.json
+python3 experiments/local_lm_quality.py --checkpoint /path/to/snapshot --output /tmp/pythia_probe.json
+```
+
+This CPU test compares next-token probability vectors on synthetic records
+under two private-field placements. It also checks prefix KV reuse against
+complete plaintext prefill.
+
+## Reproduce the matched rewrite × island ablation
+
+Run from the repository root with Python 3.9+:
+
+```bash
+python3 experiments/loopback_2pc.py --trials 100 --warmup 10 --output ./loopback-rerun
 python3 experiments/check_manuscript_evidence.py main.pdf
 ```
 
-The second command requires Poppler's `pdfinfo` and `pdftotext` and a compiled manuscript. Use `python3 experiments/figure_data.py` to refresh the vector plot data after changing the archived results. CI checks the plotted data and archived causal counts, reruns the arithmetic ablation, and enforces the conference page limit. A separate local rerun reproduced the full causal results on Apple Silicon with PyTorch 2.8.0.
+Correctness and payload sizes should reproduce. Latencies depend on the host and scheduler. The second command requires Poppler's `pdfinfo` and `pdftotext` and a compiled manuscript. Use `python3 experiments/figure_data.py` to refresh the vector plot data after changing the archived results. CI checks the plotted data and archived causal counts, reruns the arithmetic ablation, and enforces the conference page limit. A separate local rerun reproduced the full causal results on Apple Silicon with PyTorch 2.8.0.
 
 ## Source-prototype experimental provenance
 
-The `PriGraph` observations (Qwen2.5-7B/14B; synthetic tasks, calibrated simulations and preliminary multi-peer tests) and the `ShareRoute` observations (mini-GPT d=32 real 2PC/3PC MPC on a single machine/LAN; GPT-2 125M plaintext analysis) **were originally reported in two different PDFs**. No performance metric in the paper is presented as newly obtained by an integrated compiler. In particular, a 95x cross-stage 2PC-to-3PC time ratio is **not** a comparable fixed-security-stage gain; a tool-augmented local PriGraph baseline matches 100% accuracy on explicit-formula tasks.
+The `PriGraph` observations (Qwen2.5-7B/14B; synthetic tasks, calibrated simulations and preliminary multi-peer tests) and the `ShareRoute` observations (mini-GPT d=32 real 2PC/3PC MPC on a single machine/LAN; GPT-2 125M plaintext analysis) **were originally reported in two different PDFs**. The manuscript labels source-prototype results separately from the new arithmetic loopback measurements. In particular, a 95x cross-stage 2PC-to-3PC time ratio is **not** a comparable fixed-security-stage gain; a tool-augmented local PriGraph baseline matches 100% accuracy on explicit-formula tasks.
 
 ## Build
 

@@ -97,3 +97,45 @@ The latest manuscript distinguishes directly reproduced diagnostics, source-repo
 | The proposed security argument assumes complete information-flow tracking, cache independence and backend security. Metadata, control-dependent public behavior, malicious peers and cross-session composition require their own models. | Keep only a conditional plaintext egress argument and define its scope. |
 
 For the integrated evaluation, the decisive contrast is a fixed prompt set with identical disclosure policy, 2PC backend and output tolerance. Compare full MPC, same-prompt ShareRoute, task-only rewriting, joint rewriting with residual MPC, and a strong hand-written or compiler optimization baseline. Report end-to-end input/output cost, preprocessing, peer messages, latency, exact or calibrated task quality, and uncertainty by workload and seed.
+
+## Follow-up paired TCP execution
+
+This replaces the former in-process emulator as the manuscript's arithmetic
+ablation. The archive retains the emulator as an independent regression check.
+Two workers exchange square-correlation openings over TCP loopback, using
+OS-random masks and a trusted client as dealer. Each worker sees only its own
+operand and preprocessing shares. The client adds the local correction and
+reconstructs the weighted sum from the two returned shares.
+The host and dealer are trusted for this experiment. Traffic counts are
+application payload sizes measured separately for peer openings, client
+inputs/outputs, and dealer delivery. The reported cold time starts at plan
+construction and includes preprocessing over established sockets. Online time
+starts after the dealer acknowledgment and includes input encoding and result
+reconstruction. The instrumented latency includes two extra control-report
+words omitted from client payload accounting.
+
+Five schedules share each input and backend, including a hand-written
+algebraic comparator and a private-template negative control. The 4,000
+measured outputs match the plaintext reference in the 64-bit ring. At width 64
+on public templates the joint and algebraic schedules each use one square,
+16 opening bytes, 48 client payload bytes and 42 dealer/control bytes. Full
+MPC uses 64 squares and 1,024 peer opening bytes. At the same width, when all
+template operands are private all five schedules use 64 squares. The
+experiment measures the restricted arithmetic implementation and does not
+establish a gain over algebraic simplification, a general lower bound for
+private templates, an MP-SPDZ replication, WAN latency, or secure Transformer
+execution.
+
+## Pretrained model follow-up
+
+The additional plaintext check uses official Transformers 4.52.4 eager CPU
+FP32 with the pinned Pythia-70M-deduped checkpoint and weight SHA-256.
+The 48 pairs use 12 synthetic templates, two value pairs per template,
+and two field placements. Moving one secret field preserves the token
+inventory. Before the changed token the distributions have zero observed
+TV. Beyond that token, all 290 early-placement and all 82 late-placement
+unchanged-token positions exhibit TV above the prespecified (10^{-5})
+threshold. Prefix cache reuse maintains all 1,928 top-1 predictions and
+max TV is 0.001099. This demonstrates a dependency and cache behavior with
+pretrained weights. It is a single-checkpoint plaintext diagnostic on
+synthetic prompts, with no transport, secure attention, or quality benchmark.

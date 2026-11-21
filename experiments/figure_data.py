@@ -1,12 +1,12 @@
 """Derive the plotted values from the archived CPU results."""
 import argparse
 import csv
-import json
 from pathlib import Path
+
+from loopback_2pc import WIDTHS
 
 ROOT = Path(__file__).resolve().parent
 FIGURES = ROOT.parent / "figures"
-WIDTHS = (1, 4, 16, 64)
 
 
 def plot_tables():
@@ -26,21 +26,27 @@ def plot_tables():
             f"{row['prefix']:.6f} {expected:.6f}"
         )
 
-    trials = json.loads((ROOT / "results/rewrite_island.json").read_text())["results"]
-    ablation_rows = ["width full rewrite combined"]
+    with (ROOT / "results/loopback_summary.csv").open(newline="") as source:
+        timing = {(row["template"], int(row["width"]), row["arm"]): row
+                  for row in csv.DictReader(source)}
+    ablation_rows = ["width full islands rewrite joint algebra"]
     for width in WIDTHS:
-        metrics = [trials[f"width={width}/rewrite={r}/islands={i}"]
-                   for r, i in ((0, 0), (0, 1), (1, 0), (1, 1))]
-        full, islands, rewrite, combined = [
-            row["multiplications"] // row["cases"] for row in metrics
-        ]
-        if full != islands:
-            raise ValueError(f"Full MPC and islands-only diverge at width {width}")
-        ablation_rows.append(f"{width} {full} {rewrite} {combined}")
+        medians = [timing["public", width, arm]["online_median_us"]
+                   for arm in ("full", "islands", "rewrite", "joint", "algebra")]
+        ablation_rows.append(" ".join((str(width), *medians)))
 
+    matched_rows = []
+    for name, arm in (("All squares in 2PC", "full"), ("Islands only", "islands"),
+                      ("Rewrite only", "rewrite"), ("Joint", "joint"),
+                      ("Hand-written algebra", "algebra")):
+        trial = timing["public", 64, arm]
+        values = [trial[key] for key in ("secure_products", "peer_bytes", "client_bytes",
+                                        "offline_bytes", "online_median_us", "cold_median_us")]
+        matched_rows.append(" & ".join((name, *values)) + r" \\")
     return {
         "causal-sweep.dat": "\n".join(causal_rows) + "\n",
         "ablation-sweep.dat": "\n".join(ablation_rows) + "\n",
+        "matched-rows.tex": "\n".join(matched_rows + [r"\bottomrule"]) + "\n",
     }
 
 

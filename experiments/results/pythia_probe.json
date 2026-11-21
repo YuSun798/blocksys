@@ -1,0 +1,904 @@
+{
+  "model": "EleutherAI/pythia-70m-deduped",
+  "revision": "e93a9faa9c77e5d09219f6c868bfc7a1bd65593c",
+  "weight_sha256": "3da388330e4549156d76b58d6d268c63cd005e9336b4f4d2d378421e7b7a33fd",
+  "implementation": "Transformers eager CPU float32",
+  "torch": "2.8.0",
+  "transformers": "4.52.4",
+  "threads": 2,
+  "tv_threshold": 1e-05,
+  "by_placement": {
+    "early": {
+      "prompt_pairs": 24,
+      "avg_public_prefix_fraction": 0.3490082970640582,
+      "nominal_public_suffix_positions": 290,
+      "nominal_public_suffix_positions_changed": 290,
+      "median_final_tv": 0.5298852026462555,
+      "final_top1_changes": 23,
+      "field_exact": 42,
+      "field_examples": 48,
+      "max_prefix_tv": 0.0
+    },
+    "late": {
+      "prompt_pairs": 24,
+      "avg_public_prefix_fraction": 0.7804953738423923,
+      "nominal_public_suffix_positions": 82,
+      "nominal_public_suffix_positions_changed": 82,
+      "median_final_tv": 0.44698768854141235,
+      "final_top1_changes": 23,
+      "field_exact": 40,
+      "field_examples": 48,
+      "max_prefix_tv": 0.0
+    }
+  },
+  "prefix_reuse_argmax_matches": 1928,
+  "prefix_reuse_argmax_total": 1928,
+  "prefix_reuse_max_logit_error": 0.020751953125,
+  "prefix_reuse_max_tv": 0.0010992451570928097,
+  "cases": [
+    {
+      "record": "Order",
+      "placement": "early",
+      "values": [
+        "Paris",
+        "London"
+      ],
+      "sequence_tokens": 18,
+      "public_prefix_tokens": 6,
+      "max_prefix_tv": 0.0,
+      "suffix_positions_changed": 11,
+      "final_tv": 0.6569744944572449,
+      "final_top1_changes": 1,
+      "final_field_exact": 2,
+      "prefix_reuse_max_tv": 0.0005133395898155868,
+      "prefix_reuse_max_logit_error": 0.0072021484375,
+      "prefix_reuse_argmax_matches": 36
+    },
+    {
+      "record": "Order",
+      "placement": "late",
+      "values": [
+        "Paris",
+        "London"
+      ],
+      "sequence_tokens": 18,
+      "public_prefix_tokens": 14,
+      "max_prefix_tv": 0.0,
+      "suffix_positions_changed": 3,
+      "final_tv": 0.7262827157974243,
+      "final_top1_changes": 1,
+      "final_field_exact": 2,
+      "prefix_reuse_max_tv": 0.000782227492891252,
+      "prefix_reuse_max_logit_error": 0.0145263671875,
+      "prefix_reuse_argmax_matches": 36
+    },
+    {
+      "record": "Order",
+      "placement": "early",
+      "values": [
+        "Berlin",
+        "Rome"
+      ],
+      "sequence_tokens": 18,
+      "public_prefix_tokens": 6,
+      "max_prefix_tv": 0.0,
+      "suffix_positions_changed": 11,
+      "final_tv": 0.5779581069946289,
+      "final_top1_changes": 1,
+      "final_field_exact": 2,
+      "prefix_reuse_max_tv": 0.0005575920222327113,
+      "prefix_reuse_max_logit_error": 0.0093994140625,
+      "prefix_reuse_argmax_matches": 36
+    },
+    {
+      "record": "Order",
+      "placement": "late",
+      "values": [
+        "Berlin",
+        "Rome"
+      ],
+      "sequence_tokens": 18,
+      "public_prefix_tokens": 14,
+      "max_prefix_tv": 0.0,
+      "suffix_positions_changed": 3,
+      "final_tv": 0.6626698970794678,
+      "final_top1_changes": 1,
+      "final_field_exact": 2,
+      "prefix_reuse_max_tv": 0.0004510281723923981,
+      "prefix_reuse_max_logit_error": 0.0103759765625,
+      "prefix_reuse_argmax_matches": 36
+    },
+    {
+      "record": "Travel",
+      "placement": "early",
+      "values": [
+        "Paris",
+        "London"
+      ],
+      "sequence_tokens": 21,
+      "public_prefix_tokens": 7,
+      "max_prefix_tv": 0.0,
+      "suffix_positions_changed": 13,
+      "final_tv": 0.6490801572799683,
+      "final_top1_changes": 1,
+      "final_field_exact": 2,
+      "prefix_reuse_max_tv": 0.0009565472137182951,
+      "prefix_reuse_max_logit_error": 0.0137939453125,
+      "prefix_reuse_argmax_matches": 42
+    },
+    {
+      "record": "Travel",
+      "placement": "late",
+      "values": [
+        "Paris",
+        "London"
+      ],
+      "sequence_tokens": 21,
+      "public_prefix_tokens": 16,
+      "max_prefix_tv": 0.0,
+      "suffix_positions_changed": 4,
+      "final_tv": 0.712064802646637,
+      "final_top1_changes": 1,
+      "final_field_exact": 2,
+      "prefix_reuse_max_tv": 0.0004704892635345459,
+      "prefix_reuse_max_logit_error": 0.0067138671875,
+      "prefix_reuse_argmax_matches": 42
+    },
+    {
+      "record": "Travel",
+      "placement": "early",
+      "values": [
+        "Berlin",
+        "Rome"
+      ],
+      "sequence_tokens": 21,
+      "public_prefix_tokens": 7,
+      "max_prefix_tv": 0.0,
+      "suffix_positions_changed": 13,
+      "final_tv": 0.6939328908920288,
+      "final_top1_changes": 1,
+      "final_field_exact": 2,
+      "prefix_reuse_max_tv": 0.0006971320253796875,
+      "prefix_reuse_max_logit_error": 0.0089111328125,
+      "prefix_reuse_argmax_matches": 42
+    },
+    {
+      "record": "Travel",
+      "placement": "late",
+      "values": [
+        "Berlin",
+        "Rome"
+      ],
+      "sequence_tokens": 21,
+      "public_prefix_tokens": 16,
+      "max_prefix_tv": 0.0,
+      "suffix_positions_changed": 4,
+      "final_tv": 0.7967892289161682,
+      "final_top1_changes": 1,
+      "final_field_exact": 2,
+      "prefix_reuse_max_tv": 0.00039040681440383196,
+      "prefix_reuse_max_logit_error": 0.00634765625,
+      "prefix_reuse_argmax_matches": 42
+    },
+    {
+      "record": "Mail",
+      "placement": "early",
+      "values": [
+        "John",
+        "Mary"
+      ],
+      "sequence_tokens": 20,
+      "public_prefix_tokens": 7,
+      "max_prefix_tv": 0.0,
+      "suffix_positions_changed": 12,
+      "final_tv": 0.3564869165420532,
+      "final_top1_changes": 1,
+      "final_field_exact": 2,
+      "prefix_reuse_max_tv": 0.0005708496901206672,
+      "prefix_reuse_max_logit_error": 0.010498046875,
+      "prefix_reuse_argmax_matches": 40
+    },
+    {
+      "record": "Mail",
+      "placement": "late",
+      "values": [
+        "John",
+        "Mary"
+      ],
+      "sequence_tokens": 20,
+      "public_prefix_tokens": 15,
+      "max_prefix_tv": 0.0,
+      "suffix_positions_changed": 4,
+      "final_tv": 0.3468896150588989,
+      "final_top1_changes": 1,
+      "final_field_exact": 1,
+      "prefix_reuse_max_tv": 0.0005063194548711181,
+      "prefix_reuse_max_logit_error": 0.013916015625,
+      "prefix_reuse_argmax_matches": 40
+    },
+    {
+      "record": "Mail",
+      "placement": "early",
+      "values": [
+        "David",
+        "James"
+      ],
+      "sequence_tokens": 20,
+      "public_prefix_tokens": 7,
+      "max_prefix_tv": 0.0,
+      "suffix_positions_changed": 12,
+      "final_tv": 0.3136921525001526,
+      "final_top1_changes": 1,
+      "final_field_exact": 2,
+      "prefix_reuse_max_tv": 0.0008189246873371303,
+      "prefix_reuse_max_logit_error": 0.0074462890625,
+      "prefix_reuse_argmax_matches": 40
+    },
+    {
+      "record": "Mail",
+      "placement": "late",
+      "values": [
+        "David",
+        "James"
+      ],
+      "sequence_tokens": 20,
+      "public_prefix_tokens": 15,
+      "max_prefix_tv": 0.0,
+      "suffix_positions_changed": 4,
+      "final_tv": 0.2618471384048462,
+      "final_top1_changes": 1,
+      "final_field_exact": 1,
+      "prefix_reuse_max_tv": 0.0004507684789132327,
+      "prefix_reuse_max_logit_error": 0.0172119140625,
+      "prefix_reuse_argmax_matches": 40
+    },
+    {
+      "record": "Clinic",
+      "placement": "early",
+      "values": [
+        "John",
+        "Mary"
+      ],
+      "sequence_tokens": 19,
+      "public_prefix_tokens": 7,
+      "max_prefix_tv": 0.0,
+      "suffix_positions_changed": 11,
+      "final_tv": 0.31642693281173706,
+      "final_top1_changes": 1,
+      "final_field_exact": 2,
+      "prefix_reuse_max_tv": 0.0005674062413163483,
+      "prefix_reuse_max_logit_error": 0.0101318359375,
+      "prefix_reuse_argmax_matches": 38
+    },
+    {
+      "record": "Clinic",
+      "placement": "late",
+      "values": [
+        "John",
+        "Mary"
+      ],
+      "sequence_tokens": 19,
+      "public_prefix_tokens": 15,
+      "max_prefix_tv": 0.0,
+      "suffix_positions_changed": 3,
+      "final_tv": 0.36431047320365906,
+      "final_top1_changes": 1,
+      "final_field_exact": 1,
+      "prefix_reuse_max_tv": 0.0004542784590739757,
+      "prefix_reuse_max_logit_error": 0.0091552734375,
+      "prefix_reuse_argmax_matches": 38
+    },
+    {
+      "record": "Clinic",
+      "placement": "early",
+      "values": [
+        "David",
+        "James"
+      ],
+      "sequence_tokens": 19,
+      "public_prefix_tokens": 7,
+      "max_prefix_tv": 0.0,
+      "suffix_positions_changed": 11,
+      "final_tv": 0.323215514421463,
+      "final_top1_changes": 1,
+      "final_field_exact": 2,
+      "prefix_reuse_max_tv": 0.0005742663634009659,
+      "prefix_reuse_max_logit_error": 0.0172119140625,
+      "prefix_reuse_argmax_matches": 38
+    },
+    {
+      "record": "Clinic",
+      "placement": "late",
+      "values": [
+        "David",
+        "James"
+      ],
+      "sequence_tokens": 19,
+      "public_prefix_tokens": 15,
+      "max_prefix_tv": 0.0,
+      "suffix_positions_changed": 3,
+      "final_tv": 0.37643682956695557,
+      "final_top1_changes": 1,
+      "final_field_exact": 2,
+      "prefix_reuse_max_tv": 0.0004542784590739757,
+      "prefix_reuse_max_logit_error": 0.0091552734375,
+      "prefix_reuse_argmax_matches": 38
+    },
+    {
+      "record": "Stock",
+      "placement": "early",
+      "values": [
+        "red",
+        "blue"
+      ],
+      "sequence_tokens": 20,
+      "public_prefix_tokens": 6,
+      "max_prefix_tv": 0.0,
+      "suffix_positions_changed": 13,
+      "final_tv": 0.26725417375564575,
+      "final_top1_changes": 0,
+      "final_field_exact": 0,
+      "prefix_reuse_max_tv": 0.0004949826980009675,
+      "prefix_reuse_max_logit_error": 0.0128173828125,
+      "prefix_reuse_argmax_matches": 40
+    },
+    {
+      "record": "Stock",
+      "placement": "late",
+      "values": [
+        "red",
+        "blue"
+      ],
+      "sequence_tokens": 20,
+      "public_prefix_tokens": 16,
+      "max_prefix_tv": 0.0,
+      "suffix_positions_changed": 3,
+      "final_tv": 0.3250243067741394,
+      "final_top1_changes": 0,
+      "final_field_exact": 0,
+      "prefix_reuse_max_tv": 0.0005473592900671065,
+      "prefix_reuse_max_logit_error": 0.01171875,
+      "prefix_reuse_argmax_matches": 40
+    },
+    {
+      "record": "Stock",
+      "placement": "early",
+      "values": [
+        "green",
+        "black"
+      ],
+      "sequence_tokens": 20,
+      "public_prefix_tokens": 6,
+      "max_prefix_tv": 0.0,
+      "suffix_positions_changed": 13,
+      "final_tv": 0.5512874722480774,
+      "final_top1_changes": 1,
+      "final_field_exact": 0,
+      "prefix_reuse_max_tv": 0.0010992451570928097,
+      "prefix_reuse_max_logit_error": 0.020751953125,
+      "prefix_reuse_argmax_matches": 40
+    },
+    {
+      "record": "Stock",
+      "placement": "late",
+      "values": [
+        "green",
+        "black"
+      ],
+      "sequence_tokens": 20,
+      "public_prefix_tokens": 16,
+      "max_prefix_tv": 0.0,
+      "suffix_positions_changed": 3,
+      "final_tv": 0.5875453948974609,
+      "final_top1_changes": 1,
+      "final_field_exact": 0,
+      "prefix_reuse_max_tv": 0.00040592235745862126,
+      "prefix_reuse_max_logit_error": 0.0067138671875,
+      "prefix_reuse_argmax_matches": 40
+    },
+    {
+      "record": "Rental",
+      "placement": "early",
+      "values": [
+        "car",
+        "truck"
+      ],
+      "sequence_tokens": 24,
+      "public_prefix_tokens": 9,
+      "max_prefix_tv": 0.0,
+      "suffix_positions_changed": 14,
+      "final_tv": 0.5592525005340576,
+      "final_top1_changes": 1,
+      "final_field_exact": 2,
+      "prefix_reuse_max_tv": 0.0006975285359658301,
+      "prefix_reuse_max_logit_error": 0.011474609375,
+      "prefix_reuse_argmax_matches": 48
+    },
+    {
+      "record": "Rental",
+      "placement": "late",
+      "values": [
+        "car",
+        "truck"
+      ],
+      "sequence_tokens": 24,
+      "public_prefix_tokens": 18,
+      "max_prefix_tv": 0.0,
+      "suffix_positions_changed": 5,
+      "final_tv": 0.5355513095855713,
+      "final_top1_changes": 1,
+      "final_field_exact": 2,
+      "prefix_reuse_max_tv": 0.0004581024986691773,
+      "prefix_reuse_max_logit_error": 0.008056640625,
+      "prefix_reuse_argmax_matches": 48
+    },
+    {
+      "record": "Rental",
+      "placement": "early",
+      "values": [
+        "bike",
+        "van"
+      ],
+      "sequence_tokens": 24,
+      "public_prefix_tokens": 9,
+      "max_prefix_tv": 0.0,
+      "suffix_positions_changed": 14,
+      "final_tv": 0.7417789697647095,
+      "final_top1_changes": 1,
+      "final_field_exact": 2,
+      "prefix_reuse_max_tv": 0.0006002091686241329,
+      "prefix_reuse_max_logit_error": 0.017333984375,
+      "prefix_reuse_argmax_matches": 48
+    },
+    {
+      "record": "Rental",
+      "placement": "late",
+      "values": [
+        "bike",
+        "van"
+      ],
+      "sequence_tokens": 24,
+      "public_prefix_tokens": 18,
+      "max_prefix_tv": 0.0,
+      "suffix_positions_changed": 5,
+      "final_tv": 0.6928023099899292,
+      "final_top1_changes": 1,
+      "final_field_exact": 2,
+      "prefix_reuse_max_tv": 0.0006907565402798355,
+      "prefix_reuse_max_logit_error": 0.00927734375,
+      "prefix_reuse_argmax_matches": 48
+    },
+    {
+      "record": "Kitchen",
+      "placement": "early",
+      "values": [
+        "apple",
+        "orange"
+      ],
+      "sequence_tokens": 23,
+      "public_prefix_tokens": 8,
+      "max_prefix_tv": 0.0,
+      "suffix_positions_changed": 14,
+      "final_tv": 0.5578026175498962,
+      "final_top1_changes": 1,
+      "final_field_exact": 2,
+      "prefix_reuse_max_tv": 0.0006928942166268826,
+      "prefix_reuse_max_logit_error": 0.0103759765625,
+      "prefix_reuse_argmax_matches": 46
+    },
+    {
+      "record": "Kitchen",
+      "placement": "late",
+      "values": [
+        "apple",
+        "orange"
+      ],
+      "sequence_tokens": 23,
+      "public_prefix_tokens": 18,
+      "max_prefix_tv": 0.0,
+      "suffix_positions_changed": 4,
+      "final_tv": 0.6210372447967529,
+      "final_top1_changes": 1,
+      "final_field_exact": 2,
+      "prefix_reuse_max_tv": 0.0006502869655378163,
+      "prefix_reuse_max_logit_error": 0.0103759765625,
+      "prefix_reuse_argmax_matches": 46
+    },
+    {
+      "record": "Kitchen",
+      "placement": "early",
+      "values": [
+        "banana",
+        "lemon"
+      ],
+      "sequence_tokens": 23,
+      "public_prefix_tokens": 8,
+      "max_prefix_tv": 0.0,
+      "suffix_positions_changed": 14,
+      "final_tv": 0.41842687129974365,
+      "final_top1_changes": 1,
+      "final_field_exact": 2,
+      "prefix_reuse_max_tv": 0.000733804889023304,
+      "prefix_reuse_max_logit_error": 0.01220703125,
+      "prefix_reuse_argmax_matches": 46
+    },
+    {
+      "record": "Kitchen",
+      "placement": "late",
+      "values": [
+        "banana",
+        "lemon"
+      ],
+      "sequence_tokens": 23,
+      "public_prefix_tokens": 18,
+      "max_prefix_tv": 0.0,
+      "suffix_positions_changed": 4,
+      "final_tv": 0.4167708456516266,
+      "final_top1_changes": 1,
+      "final_field_exact": 2,
+      "prefix_reuse_max_tv": 0.0003379668341949582,
+      "prefix_reuse_max_logit_error": 0.0086669921875,
+      "prefix_reuse_argmax_matches": 46
+    },
+    {
+      "record": "Library",
+      "placement": "early",
+      "values": [
+        "history",
+        "science"
+      ],
+      "sequence_tokens": 20,
+      "public_prefix_tokens": 6,
+      "max_prefix_tv": 0.0,
+      "suffix_positions_changed": 13,
+      "final_tv": 0.7403550148010254,
+      "final_top1_changes": 1,
+      "final_field_exact": 2,
+      "prefix_reuse_max_tv": 0.0005361039657145739,
+      "prefix_reuse_max_logit_error": 0.0067138671875,
+      "prefix_reuse_argmax_matches": 40
+    },
+    {
+      "record": "Library",
+      "placement": "late",
+      "values": [
+        "history",
+        "science"
+      ],
+      "sequence_tokens": 20,
+      "public_prefix_tokens": 16,
+      "max_prefix_tv": 0.0,
+      "suffix_positions_changed": 3,
+      "final_tv": 0.5510432720184326,
+      "final_top1_changes": 1,
+      "final_field_exact": 2,
+      "prefix_reuse_max_tv": 0.000534036080352962,
+      "prefix_reuse_max_logit_error": 0.0050048828125,
+      "prefix_reuse_argmax_matches": 40
+    },
+    {
+      "record": "Library",
+      "placement": "early",
+      "values": [
+        "music",
+        "art"
+      ],
+      "sequence_tokens": 20,
+      "public_prefix_tokens": 6,
+      "max_prefix_tv": 0.0,
+      "suffix_positions_changed": 13,
+      "final_tv": 0.6740409731864929,
+      "final_top1_changes": 1,
+      "final_field_exact": 2,
+      "prefix_reuse_max_tv": 0.0006459202850237489,
+      "prefix_reuse_max_logit_error": 0.0086669921875,
+      "prefix_reuse_argmax_matches": 40
+    },
+    {
+      "record": "Library",
+      "placement": "late",
+      "values": [
+        "music",
+        "art"
+      ],
+      "sequence_tokens": 20,
+      "public_prefix_tokens": 16,
+      "max_prefix_tv": 0.0,
+      "suffix_positions_changed": 3,
+      "final_tv": 0.4772045314311981,
+      "final_top1_changes": 1,
+      "final_field_exact": 2,
+      "prefix_reuse_max_tv": 0.0006190320709720254,
+      "prefix_reuse_max_logit_error": 0.0113525390625,
+      "prefix_reuse_argmax_matches": 40
+    },
+    {
+      "record": "Roster",
+      "placement": "early",
+      "values": [
+        "red",
+        "blue"
+      ],
+      "sequence_tokens": 20,
+      "public_prefix_tokens": 7,
+      "max_prefix_tv": 0.0,
+      "suffix_positions_changed": 12,
+      "final_tv": 0.25736093521118164,
+      "final_top1_changes": 1,
+      "final_field_exact": 2,
+      "prefix_reuse_max_tv": 0.0004178187809884548,
+      "prefix_reuse_max_logit_error": 0.008544921875,
+      "prefix_reuse_argmax_matches": 40
+    },
+    {
+      "record": "Roster",
+      "placement": "late",
+      "values": [
+        "red",
+        "blue"
+      ],
+      "sequence_tokens": 20,
+      "public_prefix_tokens": 16,
+      "max_prefix_tv": 0.0,
+      "suffix_positions_changed": 3,
+      "final_tv": 0.2668890953063965,
+      "final_top1_changes": 1,
+      "final_field_exact": 2,
+      "prefix_reuse_max_tv": 0.0003798427351284772,
+      "prefix_reuse_max_logit_error": 0.0067138671875,
+      "prefix_reuse_argmax_matches": 40
+    },
+    {
+      "record": "Roster",
+      "placement": "early",
+      "values": [
+        "green",
+        "black"
+      ],
+      "sequence_tokens": 20,
+      "public_prefix_tokens": 7,
+      "max_prefix_tv": 0.0,
+      "suffix_positions_changed": 12,
+      "final_tv": 0.7027066349983215,
+      "final_top1_changes": 1,
+      "final_field_exact": 1,
+      "prefix_reuse_max_tv": 0.000457960442872718,
+      "prefix_reuse_max_logit_error": 0.01123046875,
+      "prefix_reuse_argmax_matches": 40
+    },
+    {
+      "record": "Roster",
+      "placement": "late",
+      "values": [
+        "green",
+        "black"
+      ],
+      "sequence_tokens": 20,
+      "public_prefix_tokens": 16,
+      "max_prefix_tv": 0.0,
+      "suffix_positions_changed": 3,
+      "final_tv": 0.5610342025756836,
+      "final_top1_changes": 1,
+      "final_field_exact": 2,
+      "prefix_reuse_max_tv": 0.0005842751124873757,
+      "prefix_reuse_max_logit_error": 0.0076904296875,
+      "prefix_reuse_argmax_matches": 40
+    },
+    {
+      "record": "Garden",
+      "placement": "early",
+      "values": [
+        "oak",
+        "pine"
+      ],
+      "sequence_tokens": 20,
+      "public_prefix_tokens": 7,
+      "max_prefix_tv": 0.0,
+      "suffix_positions_changed": 12,
+      "final_tv": 0.46485084295272827,
+      "final_top1_changes": 1,
+      "final_field_exact": 2,
+      "prefix_reuse_max_tv": 0.0004903427325189114,
+      "prefix_reuse_max_logit_error": 0.0106201171875,
+      "prefix_reuse_argmax_matches": 40
+    },
+    {
+      "record": "Garden",
+      "placement": "late",
+      "values": [
+        "oak",
+        "pine"
+      ],
+      "sequence_tokens": 20,
+      "public_prefix_tokens": 16,
+      "max_prefix_tv": 0.0,
+      "suffix_positions_changed": 3,
+      "final_tv": 0.382951021194458,
+      "final_top1_changes": 1,
+      "final_field_exact": 1,
+      "prefix_reuse_max_tv": 0.0005416195490397513,
+      "prefix_reuse_max_logit_error": 0.008544921875,
+      "prefix_reuse_argmax_matches": 40
+    },
+    {
+      "record": "Garden",
+      "placement": "early",
+      "values": [
+        "maple",
+        "ash"
+      ],
+      "sequence_tokens": 20,
+      "public_prefix_tokens": 7,
+      "max_prefix_tv": 0.0,
+      "suffix_positions_changed": 12,
+      "final_tv": 0.5113995671272278,
+      "final_top1_changes": 1,
+      "final_field_exact": 2,
+      "prefix_reuse_max_tv": 0.0005405723350122571,
+      "prefix_reuse_max_logit_error": 0.00732421875,
+      "prefix_reuse_argmax_matches": 40
+    },
+    {
+      "record": "Garden",
+      "placement": "late",
+      "values": [
+        "maple",
+        "ash"
+      ],
+      "sequence_tokens": 20,
+      "public_prefix_tokens": 16,
+      "max_prefix_tv": 0.0,
+      "suffix_positions_changed": 3,
+      "final_tv": 0.39986652135849,
+      "final_top1_changes": 1,
+      "final_field_exact": 2,
+      "prefix_reuse_max_tv": 0.000677508651278913,
+      "prefix_reuse_max_logit_error": 0.009521484375,
+      "prefix_reuse_argmax_matches": 40
+    },
+    {
+      "record": "Receipt",
+      "placement": "early",
+      "values": [
+        "10",
+        "20"
+      ],
+      "sequence_tokens": 17,
+      "public_prefix_tokens": 7,
+      "max_prefix_tv": 0.0,
+      "suffix_positions_changed": 9,
+      "final_tv": 0.2887819707393646,
+      "final_top1_changes": 1,
+      "final_field_exact": 2,
+      "prefix_reuse_max_tv": 0.0007608177838847041,
+      "prefix_reuse_max_logit_error": 0.0113525390625,
+      "prefix_reuse_argmax_matches": 34
+    },
+    {
+      "record": "Receipt",
+      "placement": "late",
+      "values": [
+        "10",
+        "20"
+      ],
+      "sequence_tokens": 17,
+      "public_prefix_tokens": 13,
+      "max_prefix_tv": 0.0,
+      "suffix_positions_changed": 3,
+      "final_tv": 0.36089175939559937,
+      "final_top1_changes": 1,
+      "final_field_exact": 2,
+      "prefix_reuse_max_tv": 0.00041019677883014083,
+      "prefix_reuse_max_logit_error": 0.0079345703125,
+      "prefix_reuse_argmax_matches": 34
+    },
+    {
+      "record": "Receipt",
+      "placement": "early",
+      "values": [
+        "30",
+        "40"
+      ],
+      "sequence_tokens": 17,
+      "public_prefix_tokens": 7,
+      "max_prefix_tv": 0.0,
+      "suffix_positions_changed": 9,
+      "final_tv": 0.24338291585445404,
+      "final_top1_changes": 1,
+      "final_field_exact": 1,
+      "prefix_reuse_max_tv": 0.0005065904115326703,
+      "prefix_reuse_max_logit_error": 0.0130615234375,
+      "prefix_reuse_argmax_matches": 34
+    },
+    {
+      "record": "Receipt",
+      "placement": "late",
+      "values": [
+        "30",
+        "40"
+      ],
+      "sequence_tokens": 17,
+      "public_prefix_tokens": 13,
+      "max_prefix_tv": 0.0,
+      "suffix_positions_changed": 3,
+      "final_tv": 0.36766964197158813,
+      "final_top1_changes": 1,
+      "final_field_exact": 2,
+      "prefix_reuse_max_tv": 0.000478458299767226,
+      "prefix_reuse_max_logit_error": 0.0081787109375,
+      "prefix_reuse_argmax_matches": 34
+    },
+    {
+      "record": "Weather",
+      "placement": "early",
+      "values": [
+        "winter",
+        "summer"
+      ],
+      "sequence_tokens": 19,
+      "public_prefix_tokens": 7,
+      "max_prefix_tv": 0.0,
+      "suffix_positions_changed": 11,
+      "final_tv": 0.25466233491897583,
+      "final_top1_changes": 1,
+      "final_field_exact": 2,
+      "prefix_reuse_max_tv": 0.0005636499263346195,
+      "prefix_reuse_max_logit_error": 0.010986328125,
+      "prefix_reuse_argmax_matches": 38
+    },
+    {
+      "record": "Weather",
+      "placement": "late",
+      "values": [
+        "winter",
+        "summer"
+      ],
+      "sequence_tokens": 19,
+      "public_prefix_tokens": 15,
+      "max_prefix_tv": 0.0,
+      "suffix_positions_changed": 3,
+      "final_tv": 0.2831016778945923,
+      "final_top1_changes": 1,
+      "final_field_exact": 2,
+      "prefix_reuse_max_tv": 0.0007486635586246848,
+      "prefix_reuse_max_logit_error": 0.007080078125,
+      "prefix_reuse_argmax_matches": 38
+    },
+    {
+      "record": "Weather",
+      "placement": "early",
+      "values": [
+        "spring",
+        "fall"
+      ],
+      "sequence_tokens": 19,
+      "public_prefix_tokens": 7,
+      "max_prefix_tv": 0.0,
+      "suffix_positions_changed": 11,
+      "final_tv": 0.5483708381652832,
+      "final_top1_changes": 1,
+      "final_field_exact": 2,
+      "prefix_reuse_max_tv": 0.0005615032278001308,
+      "prefix_reuse_max_logit_error": 0.01416015625,
+      "prefix_reuse_argmax_matches": 38
+    },
+    {
+      "record": "Weather",
+      "placement": "late",
+      "values": [
+        "spring",
+        "fall"
+      ],
+      "sequence_tokens": 19,
+      "public_prefix_tokens": 15,
+      "max_prefix_tv": 0.0,
+      "suffix_positions_changed": 3,
+      "final_tv": 0.5930818319320679,
+      "final_top1_changes": 1,
+      "final_field_exact": 2,
+      "prefix_reuse_max_tv": 0.0006643018568865955,
+      "prefix_reuse_max_logit_error": 0.0096435546875,
+      "prefix_reuse_argmax_matches": 38
+    }
+  ]
+}

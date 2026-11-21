@@ -1,0 +1,10 @@
+{
+  "platform": "macOS-26.5.2-arm64-arm-64bit",
+  "python": "3.9.6",
+  "trials_per_cell": 100,
+  "warmup_per_cell": 10,
+  "transport": "TCP loopback, separate multiprocessing workers",
+  "ring_bits": 64,
+  "party_count": 2,
+  "trusted_dealer": true
+}
