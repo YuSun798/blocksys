@@ -115,3 +115,13 @@ GitHub pushes do not automatically update an Overleaf project unless a separate 
 ## Remaining essential research work
 
 A proper end-to-end claim requires a real integrated compiler and MPC backend, identical task/model/hardware configurations, fixed S1/S2 adversary stages, WAN measurements, deterministic-tool local baselines, privacy and correctness controls, calibration of the joint cost model, and ablations of rewrite, reuse, operator islands, and protocol selection.
+
+
+### Reproduce the network sensitivity model
+
+Run `python3 experiments/network_sensitivity.py --check` to regenerate and
+compare the 18 scenario summaries against the archived composed-request
+traces. The replay uses a four-RTT dependency term and application-byte
+serialization across either a shared bottleneck or equal-capacity parallel
+client links. These are modeled scenarios based on measured payloads and
+loopback time.

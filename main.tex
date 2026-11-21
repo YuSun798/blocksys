@@ -357,6 +357,26 @@ Policy & QK peer (B) & Dealer (B) & Head (B) & Elapsed (ms)\\
 \end{tabular}
 \end{table}
 
+\paragraph{Network sensitivity from measured traces.}
+We replay each composed request with an analytical transport overlay
+$T_{\mathrm{loopback}}+4R+8B/C$, where $R$ is round-trip latency, $B$
+is the application byte count and $C$ is link bit rate. Eight ordered
+one-way dependencies cover dealer delivery and ACK, QK input, two
+sequential peer openings, QK output, head input and head output.
+This charges all bytes to one shared bottleneck, including dealer
+traffic. For a parallel-link variant, symmetric client-side traffic
+(including dealer messages) is split across two equal-capacity links;
+the ordered openings still use the full peer byte count. We sweep
+$R\in\{1,10,40\}$ ms and $C\in\{10,100,1000\}$ Mbit/s on the same 96
+paired traces. At 100 Mbit/s on the shared link, the median paired
+full-to-joint ratio falls from 6.52 at 1 ms RTT to 1.72 at 40 ms.
+At 40 ms and 1 Gbit/s it is 1.13. In the parallel-link variant the
+corresponding ratios are 5.37, 1.48 and 1.10. Both policies have the
+same ordered dependencies, so propagation erodes the ratio even when
+payload savings persist. The overlay models serialization and dependency
+delays on top of loopback measurements. It omits congestion, loss,
+TCP window effects and concurrent requests.
+
 \section{Related Work}
 Public/private routing approaches such as PPMI, PRISM, MINIM, and agentic privacy-preserving ML specialize disclosure and placement but do not jointly construct reusable parameterized task programs and optimize their residual MPC graphs \cite{ppmi,prism,minim,agenticppml,splitdenoise}. APC reuses adaptable plan templates and collaborative numerical reasoning reconstructs local answers from remote-generated patterns. LLMCompiler and equality saturation provide antecedents for graph-level optimization \cite{apc,relaycache,collab,compiler,egg}. HEFT and static information-flow control provide placement and typing foundations \cite{heft,sabelfeld,cocoon}. SecretFlow-SPU and MP-SPDZ provide MPC backends. Systems including PUMA, BOLT, SOAL, FuseFSS, BLB, and MPCache optimize secure inference operations that can compose with island selection \cite{secretflow,mpspdz,puma,bolt,soal,fusefss,blb,mpcache,cheng}. P2P systems such as Petals, Swarm, and PlanetServe supply deployment motivations rather than a proof of private execution \cite{petals,swarm,planetserve}.
 

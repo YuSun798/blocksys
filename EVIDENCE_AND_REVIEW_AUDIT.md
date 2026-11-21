@@ -211,3 +211,15 @@ head while retaining selective QK. Elapsed medians of 14.03 ms and 4.96 ms
 compare two offloaded policies on this host. The result is scoped to one
 selected attention head and a constrained output head with the rest of the
 model local, semi-honest workers, a trusted client/dealer, and no WAN claim.
+
+
+## Network sensitivity replay
+
+The 18 scenarios overlay analytical serialization and propagation on all
+96 composed-request traces. The shared-link model serializes all payloads.
+The parallel-link model uses the maximum of two equal-size client-side
+messages and serializes both ordered inter-worker openings. Both charge
+four RTTs and use the measured loopback elapsed time as the starting point.
+The paired ratios are medians of individual full-to-joint ratios.
+This model does not measure cross-host performance, change the security
+assumptions, or simulate TCP congestion or concurrent traffic.
