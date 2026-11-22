@@ -8,15 +8,15 @@ import random
 import statistics
 import time
 from collections import defaultdict
-from dataclasses import replace
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 import numpy as np
 import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer, __version__ as transformers_version
+from transformers import AutoConfig, AutoModelForCausalLM, AutoTokenizer, __version__ as transformers_version
 
 from cross_layer_rewrite import ARMS as MPC_ARMS
-from cross_layer_rewrite import BASE, TASKS, digest_words, lift_note, render, task_plans
+from cross_layer_rewrite import BASE, HEAD_WIDTH, TASKS, digest_words, lift_note, render, task_plans
 from local_lm_quality import MODEL, REVISION, WEIGHT_SHA256, verify_checkpoint
 from pythia_composed import replace_scores
 from pythia_qk_2pc import HEAD, LAYER, SCALE, workers
@@ -37,6 +37,61 @@ PUBLIC_TEXT = (
 LOCAL_ARMS = ("local_original", "local_rewrite", "parser_original", "parser_rewrite")
 ARMS = (*MPC_ARMS, *LOCAL_ARMS)
 COUNTERS = ("qk_products", "qk_peer_bytes", "qk_dealer_bytes", "qk_client_bytes", "head_bytes", "rows_sent")
+VOCAB_SIZE = 50304
+
+
+@dataclass(frozen=True)
+class Checkpoint:
+    model: str
+    revision: str
+    weight_sha256: str
+    config_sha256: str
+    hidden_width: int
+    heads: int
+    layers: int
+    archive_stem: str
+
+
+CHECKPOINTS = {
+    "70m": Checkpoint(
+        MODEL, REVISION, WEIGHT_SHA256,
+        "002050231a9b1ec3ac77aa6b9b3bbdc4d923f4068a7dd33b8da72a9bd6ad9a43",
+        512, 8, 6, "cross_layer_scale",
+    ),
+    "160m": Checkpoint(
+        "EleutherAI/pythia-160m-deduped",
+        "582159a2dfe3e712a8d47ae83dec95ae3bde8e7e",
+        "bbaae5c00917b163baa499fc8eb64859ee0c850c5fdecfc32f4d70dc07213575",
+        "76eb275107220e450d31258f792a2efcbee109d8b62ae0088260057dec06362f",
+        768, 12, 12, "cross_layer_scale_160m",
+    ),
+}
+
+
+def checkpoint_artifacts(spec):
+    return {
+        "config.json": spec.config_sha256,
+        "tokenizer.json": "c24618a1b3e6a38167beff1c72cffd126c3a66254347304b50547d12c5f25624",
+        "tokenizer_config.json": "70e38394e494931c6f773ba41e19460dd4436526b852207367f04341b4066d3f",
+        "special_tokens_map.json": "6f50ab5a5a509a1c309d6171f339b196a900dc9c99ad0408ff23bb615fdae7ad",
+        "model.safetensors": spec.weight_sha256,
+    }
+
+
+def validate_checkpoint(checkpoint, spec):
+    for file_name, expected in checkpoint_artifacts(spec).items():
+        digest = hashlib.sha256()
+        with (checkpoint / file_name).open("rb") as stream:
+            for block in iter(lambda: stream.read(4 << 20), b""):
+                digest.update(block)
+        if digest.hexdigest() != expected:
+            raise ValueError(f"{file_name} does not match {spec.model} revision {spec.revision}")
+
+    config = AutoConfig.from_pretrained(checkpoint, local_files_only=True)
+    shape = (config.model_type, config.vocab_size, config.hidden_size,
+             config.num_attention_heads, config.num_hidden_layers)
+    if shape != ("gpt_neox", VOCAB_SIZE, spec.hidden_width, spec.heads, spec.layers):
+        raise ValueError(f"unexpected architecture for {spec.model}: {shape}")
 
 
 def take_field(text, task, candidate_ids):
@@ -100,16 +155,25 @@ def evaluate_arm(arm, prepared, body, layer, max_weight, vocab, qk_channels, hea
 
 
 @torch.inference_mode()
-def run(checkpoint, transport):
-    verify_checkpoint(checkpoint)
+def run(checkpoint, transport, spec=None):
+    if spec is None:
+        verify_checkpoint(checkpoint)
+    else:
+        validate_checkpoint(checkpoint, spec)
     torch.set_num_threads(2)
     tokenizer = AutoTokenizer.from_pretrained(checkpoint, local_files_only=True)
     model = AutoModelForCausalLM.from_pretrained(
         checkpoint, local_files_only=True, torch_dtype=torch.float32, attn_implementation="eager",
     ).eval()
     body = model.base_model
+    if model.config.model_type != "gpt_neox" or LAYER >= len(body.layers):
+        raise ValueError("benchmark requires the selected GPT-NeoX layer")
     layer = body.layers[LAYER].attention
+    if layer.head_size != HEAD_WIDTH or HEAD >= model.config.num_attention_heads:
+        raise ValueError("attention shape does not match the fixed-width planner")
     weight = model.get_output_embeddings().weight.numpy()
+    if weight.shape != (VOCAB_SIZE, model.config.hidden_size):
+        raise ValueError("unexpected output-head matrix dimensions")
     fixed_weight = quantize(weight)
     max_weight = int(np.abs(fixed_weight).max())
     vocab = weight.shape[0]
@@ -181,7 +245,7 @@ def run(checkpoint, transport):
     return rows
 
 
-def summarize(rows, transport):
+def summarize(rows, transport, spec=None):
     cells = defaultdict(list)
     for row in rows:
         cells[row["extra_sentences"], row["arm"]].append(row)
@@ -217,8 +281,10 @@ def summarize(rows, transport):
             "incorrect_to_correct": sum(a["choice"] != a["target"] and b["choice"] == b["target"] for a, b in pairs),
             "median_elapsed_operator_over_joint": statistics.median(a["elapsed_ns"] / b["elapsed_ns"] for a, b in pairs),
         }
-    return {
-        "model": MODEL, "revision": REVISION, "weight_sha256": WEIGHT_SHA256,
+    metadata = {
+        "model": spec.model if spec else MODEL,
+        "revision": spec.revision if spec else REVISION,
+        "weight_sha256": spec.weight_sha256 if spec else WEIGHT_SHA256,
         "platform": platform.platform(), "torch": str(torch.__version__),
         "transformers": transformers_version, "numpy": np.__version__, "threads": 2,
         "layer_index": LAYER, "head_index": HEAD, "ring_bits": 64, "scale": SCALE,
@@ -232,6 +298,13 @@ def summarize(rows, transport):
         },
         "summary": result,
     }
+    if spec:
+        metadata.update(
+            hidden_width=spec.hidden_width, head_width=HEAD_WIDTH, vocab_size=VOCAB_SIZE,
+            num_attention_heads=spec.heads, num_hidden_layers=spec.layers,
+            artifact_sha256=checkpoint_artifacts(spec),
+        )
+    return metadata
 
 
 if __name__ == "__main__":
@@ -239,15 +312,17 @@ if __name__ == "__main__":
     parser.add_argument("--checkpoint", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--transport", choices=("tcp", "unix"), default="tcp")
+    parser.add_argument("--model", choices=tuple(CHECKPOINTS), default="70m")
     args = parser.parse_args()
-    cases = run(args.checkpoint, args.transport)
+    spec = CHECKPOINTS[args.model]
+    cases = run(args.checkpoint, args.transport, spec)
     args.output.mkdir(parents=True, exist_ok=True)
-    raw = args.output / "cross_layer_scale_cases.csv"
+    raw = args.output / f"{spec.archive_stem}_cases.csv"
     with raw.open("w", newline="") as stream:
         writer = csv.DictWriter(stream, cases[0].keys(), lineterminator="\n")
         writer.writeheader()
         writer.writerows(cases)
-    report = summarize(cases, args.transport)
+    report = summarize(cases, args.transport, spec)
     report["raw_sha256"] = hashlib.sha256(raw.read_bytes()).hexdigest()
-    (args.output / "cross_layer_scale_summary.json").write_text(json.dumps(report, indent=2) + "\n")
+    (args.output / f"{spec.archive_stem}_summary.json").write_text(json.dumps(report, indent=2) + "\n")
     print(f"{len(cases)} paired-policy runs on {report['transport']}")

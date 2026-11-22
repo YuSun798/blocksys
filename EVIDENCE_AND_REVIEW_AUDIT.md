@@ -309,3 +309,50 @@ JPEG is figures/record-lift-nano-banana.jpg and has SHA-256
 c148de377852a9f27eac54f8cd00df03693e1b9ed1ed795f6e03523f93e881ad.
 Caption and acknowledgments disclose the use of Nano Banana.
 The numeric tables are generated directly from archived measurements.
+
+
+
+## Two-checkpoint replication and quality-gate replay
+
+The 160M experiment repeats the complete 1,296-run TCP sweep from the
+70M checkpoint, including five protected configurations and four local
+comparators. Both checkpoints use the same 48 structured records at
+each length tier. The pairing checker requires identical candidate IDs,
+prompt and multiset token fingerprints, layout, target, disclosed
+prefix and QK counters. Only the hidden-vector width changes application
+accounting. The four-row output head uses 8,296 bytes for 70M and
+12,392 bytes for 160M. Both checkpoints use 64-wide attention heads.
+The new official runner records hashes of the pinned weight file,
+configuration, tokenizer and companion files. Protected results for
+each layout match that layout's native predictions in all 1,440
+protected runs across the two checkpoints.
+
+For 160M, the original-layout operator-only arm gets 39/48, 39/48 and
+35/48 correct. Joint gets 27/48, 26/48 and 24/48, with 40 regressions
+and four gains across the paired tiers. The same regressions appear
+in local FP32. The semantic record contract therefore admits changes
+that reduce work while changing model predictions. The tier totals
+are descriptive because note lengths reuse the same semantic records.
+Record order, tokenizer, and communication invariance do not establish
+task accuracy or robustness beyond this model family.
+
+An exhaustive replay admits a lift only if all four authorized bindings
+of a schema leave its native FP32 decision unchanged. The check uses
+all allowed values, without conditioning on the actual private value.
+For 160M this selects the lift on 5/12, 5/12 and 2/12 schema instances
+and preserves the original decisions. The median paired byte ratio is
+1.00 at each tier, while aggregate bytes fall by about 30%, 40% and 16%.
+For 70M the gate admits 11/12, 12/12 and 12/12. These are archive replays
+under a finite exhaustive domain and pinned checkpoint. Preparation
+latency and guard behavior for open-ended fields remain unevaluated.
+
+## Accessible vector figure handoff
+
+The published-facing version of the record-layout diagram keeps the
+Nano Banana rendering as its visual reference and typesets the same
+two verified field orders as vector graphics. Both the original JPEG
+and its editable TikZ adaptation remain in the source bundle.
+Descriptions for all three figures are embedded in the official
+LNCS source. The class generates a separate description list at build
+time. Bibliography items are ordered by first citation, and every grouped
+citation lists reference numbers in ascending order.

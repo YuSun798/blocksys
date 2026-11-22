@@ -104,21 +104,30 @@ summary. Raw fingerprints and target IDs describe synthetic inputs.
 
 ## Reproduce the context-length and local-control study
 
-Use the same pinned checkpoint and local environment.
+Use the local CPU environment described above. The 70M snapshot is pinned
+above. The 160M snapshot is
+`EleutherAI/pythia-160m-deduped` at revision
+`582159a2dfe3e712a8d47ae83dec95ae3bde8e7e`. The runner checks the
+safetensors, tokenizer and configuration hashes against its checkpoint
+manifest.
 
 ```bash
-TOKENIZERS_PARALLELISM=false python3 experiments/cross_layer_scale.py --checkpoint /path/to/snapshot --output ./scale-rerun --transport tcp
-python3 experiments/check_cross_layer_scale.py ./scale-rerun/cross_layer_scale_cases.csv --summary ./scale-rerun/cross_layer_scale_summary.json --transport tcp
+TOKENIZERS_PARALLELISM=false python3 experiments/cross_layer_scale.py --model 70m --checkpoint /path/to/70m --output ./scale-rerun --transport tcp
+TOKENIZERS_PARALLELISM=false python3 experiments/cross_layer_scale.py --model 160m --checkpoint /path/to/160m --output ./scale-rerun --transport tcp
+python3 experiments/check_cross_layer_scale.py ./scale-rerun/cross_layer_scale_cases.csv --summary ./scale-rerun/cross_layer_scale_summary.json --transport tcp --compare-cases ./scale-rerun/cross_layer_scale_160m_cases.csv --compare-summary ./scale-rerun/cross_layer_scale_160m_summary.json
+python3 experiments/layout_quality_gate.py ./scale-rerun/cross_layer_scale_cases.csv
+python3 experiments/layout_quality_gate.py ./scale-rerun/cross_layer_scale_160m_cases.csv
 ```
 
-This adds zero, three, or nine public sentences to the same record schemas.
-Five protected configurations, local FP32 for both layouts, and a local
-parser for both layouts each see the same 48 field bindings within a
-length tier. The post-tokenization timings include dealer work for the
-protected paths. The parser receives the same rendered record and a
-schema-derived candidate map. The application counters include all four
-protected channels. The archived cases validate the table, including
-zero network traffic for both trusted-local comparators.
+Both checkpoints see the same records with zero, three, or nine extra
+public sentences. Each length tier evaluates five protected configurations,
+local FP32 on both layouts, and a local parser on both layouts. The
+post-tokenization timings include dealer work for the protected paths.
+The joint archive check verifies matching prompts and QK traffic, differing
+head costs, and native decision agreement separately for each layout. The
+finite-domain replay keeps the original layout whenever one of the four
+authorized bindings changes the native decision. The replay uses archived
+byte counts as costs. Gate execution time remains unmeasured.
 
 ## Reproduce the matched rewrite × island ablation
 

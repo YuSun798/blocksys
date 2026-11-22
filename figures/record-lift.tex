@@ -1,0 +1,18 @@
+\begin{tikzpicture}[
+  x=1cm,y=1cm,font=\small,
+  cell/.style={minimum height=.66cm,align=center,inner sep=2pt},
+  public/.style={draw=routePublic,fill=routePublic!18},
+  private/.style={draw=routeSecure,fill=routeSecure!22},
+  tail/.style={draw=black!50,fill=black!8}
+]
+\node[anchor=east] at (-.30,.42) {Original};
+\node[anchor=east] at (-.30,-.42) {Rewritten};
+\foreach \y in {.42,-.42} {
+  \node[cell,public,text width=1.78cm] at (1,\y) {Header};
+  \node[cell,tail,text width=1.55cm] at (8.34,\y) {Query};
+}
+\node[cell,private,text width=2.38cm] at (3.39,.42) {Private value};
+\node[cell,tail,text width=2.38cm] at (6.06,.42) {Public note};
+\node[cell,public,text width=2.38cm] at (3.39,-.42) {Public note};
+\node[cell,private,text width=2.38cm] at (6.06,-.42) {Private value};
+\end{tikzpicture}

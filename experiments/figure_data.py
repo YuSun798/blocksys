@@ -85,21 +85,29 @@ def plot_tables():
                   f"{total / 1000:,.1f}", f"{row['median_elapsed_ms']:.2f}",
                   f"{row['protected_correct']}/{row['prompts']}")
         compiled_rows.append(" & ".join((label, *values)) + r" \\")
-    scaling = json.loads((ROOT / "results/cross_layer_scale_summary.json").read_text())["summary"]
     scale_rows = []
-    for _, panel in sorted(scaling.items(), key=lambda item: int(item[0])):
-        operator = panel["operator_only"]
-        joint = panel["joint"]
-        local = panel["local_rewrite"]
-        first, last = joint["range_tokens"]
-        scale_rows.append(" & ".join((
-            f"{first}--{last}",
-            f"{operator['mean_total_application_bytes'] / 1e6:.3f}",
-            f"{joint['mean_total_application_bytes'] / 1e6:.3f}",
-            f"{operator['median_elapsed_ms']:.2f}",
-            f"{joint['median_elapsed_ms']:.2f}",
-            f"{local['median_elapsed_ms']:.2f}",
-        )) + r" \\")
+    for checkpoint, suffix in (("70M", ""), ("160M", "_160m")):
+        if scale_rows:
+            scale_rows.append(r"\addlinespace")
+        path = ROOT / f"results/cross_layer_scale{suffix}_summary.json"
+        scaling = json.loads(path.read_text())["summary"]
+        for index, tier in enumerate(sorted(scaling, key=int)):
+            panel = scaling[tier]
+            operator = panel["operator_only"]
+            joint = panel["joint"]
+            local = panel["local_rewrite"]
+            first, last = joint["range_tokens"]
+            scale_rows.append(" & ".join((
+                checkpoint if index == 0 else "",
+                f"{first}--{last}",
+                f"{operator['mean_total_application_bytes'] / 1e6:.3f}",
+                f"{joint['mean_total_application_bytes'] / 1e6:.3f}",
+                f"{operator['median_elapsed_ms']:.2f}",
+                f"{joint['median_elapsed_ms']:.2f}",
+                f"{local['median_elapsed_ms']:.2f}",
+                str(operator["correct"]),
+                str(joint["correct"]),
+            )) + r" \\")
     return {
         "causal-sweep.dat": "\n".join(causal_rows) + "\n",
         "ablation-sweep.dat": "\n".join(ablation_rows) + "\n",

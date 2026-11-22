@@ -15,13 +15,56 @@ LEVELS = (0, 3, 9)
 ARMS = (*PROTECTED_ARMS, "local_original", "local_rewrite", "parser_original", "parser_rewrite")
 TRAFFIC = ("qk_peer_bytes", "qk_dealer_bytes", "qk_client_bytes", "head_bytes")
 COUNT_FIELDS = (*TRAFFIC, "qk_products", "selected_prefix_tokens", "rows_sent")
+PINNED = {
+    "EleutherAI/pythia-70m-deduped": (
+        "e93a9faa9c77e5d09219f6c868bfc7a1bd65593c",
+        "3da388330e4549156d76b58d6d268c63cd005e9336b4f4d2d378421e7b7a33fd",
+        "002050231a9b1ec3ac77aa6b9b3bbdc4d923f4068a7dd33b8da72a9bd6ad9a43",
+        512, 8, 6,
+    ),
+    "EleutherAI/pythia-160m-deduped": (
+        "582159a2dfe3e712a8d47ae83dec95ae3bde8e7e",
+        "bbaae5c00917b163baa499fc8eb64859ee0c850c5fdecfc32f4d70dc07213575",
+        "76eb275107220e450d31258f792a2efcbee109d8b62ae0088260057dec06362f",
+        768, 12, 12,
+    ),
+}
+PAIR_FIELDS = (
+    "layout", "tokens", "public_prefix_tokens", "selected_prefix_tokens", "target",
+    "candidate_ids_sha256", "prompt_sha256", "token_multiset_sha256",
+    "qk_products", "qk_peer_bytes", "qk_dealer_bytes", "qk_client_bytes", "rows_sent",
+)
 
 
 def total(row):
     return sum(row[name] for name in TRAFFIC)
 
 
+def checkpoint_width(manifest):
+    model = manifest.get("model")
+    if model not in PINNED:
+        raise ValueError(f"scale archive model is not pinned: {model}")
+    revision, sha, config_sha, width, heads, layers = PINNED[model]
+    if (manifest["revision"], manifest["weight_sha256"]) != (revision, sha):
+        raise ValueError(f"pinned weight provenance does not match {model}")
+    dimensions = dict(hidden_width=width, head_width=64, vocab_size=50304,
+                      num_attention_heads=heads, num_hidden_layers=layers)
+    if any(manifest.get(field, value) != value for field, value in dimensions.items()):
+        raise ValueError(f"archive dimensions do not match {model}")
+    artifacts = {
+        "config.json": config_sha,
+        "tokenizer.json": "c24618a1b3e6a38167beff1c72cffd126c3a66254347304b50547d12c5f25624",
+        "tokenizer_config.json": "70e38394e494931c6f773ba41e19460dd4436526b852207367f04341b4066d3f",
+        "special_tokens_map.json": "6f50ab5a5a509a1c309d6171f339b196a900dc9c99ad0408ff23bb615fdae7ad",
+        "model.safetensors": sha,
+    }
+    if manifest.get("artifact_sha256", artifacts) != artifacts:
+        raise ValueError(f"archive artifact pins do not match {model}")
+    return width
+
+
 def analyze(case_path, manifest):
+    hidden_width = checkpoint_width(manifest)
     trial_rows = defaultdict(dict)
     with case_path.open(newline="") as source:
         for raw in csv.DictReader(source):
@@ -81,6 +124,9 @@ def analyze(case_path, manifest):
             selective = row["arm"] not in ("full", "rewrite_only")
             prefix = row["public_prefix_tokens"] if selective else 0
             expected_counts = payloads(row["tokens"], prefix, rows=4)
+            # Each of two workers receives a count, four row IDs and one
+            # hidden-state share, then returns four 64-bit score shares.
+            expected_counts["head_bytes"] = 2 * (4 + 4 * 4 + 8 * hidden_width + 8 * 4)
             if (row["rows_sent"] != 4 or row["selected_prefix_tokens"] != prefix
                     or any(row[field] != count for field, count in expected_counts.items())
                     or not DIGEST(row["protected_logit_sha256"]) or row["exact_ring"] != 1):
@@ -164,20 +210,45 @@ def analyze(case_path, manifest):
     return levels
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("cases", type=Path)
-    parser.add_argument("--summary", type=Path, required=True)
-    parser.add_argument("--transport", choices=("tcp", "unix"), default="tcp")
-    args = parser.parse_args()
-    metadata = json.loads(args.summary.read_text())
-    if metadata["raw_sha256"] != hashlib.sha256(args.cases.read_bytes()).hexdigest():
+def read_archive(cases, summary, transport):
+    metadata = json.loads(summary.read_text())
+    if metadata["raw_sha256"] != hashlib.sha256(cases.read_bytes()).hexdigest():
         raise ValueError("scale archive SHA-256 does not match metadata")
     names = {"tcp": "TCP loopback", "unix": "AF_UNIX socketpair"}
-    if metadata["transport"] != names[args.transport]:
+    if metadata["transport"] != names[transport]:
         raise ValueError("scale archive transport does not match requested transport")
     if (metadata["templates"], metadata["bindings_per_template"], metadata["ring_bits"],
             metadata["scale"], metadata["warmup_requests_per_arm_per_note_length"],
             metadata["layer_index"], metadata["head_index"]) != (12, 4, 64, 1 << 16, 1, 1, 0):
         raise ValueError("scale archive metadata does not match study design")
-    print(json.dumps(analyze(args.cases, metadata), indent=2))
+    return metadata["model"], analyze(cases, metadata)
+
+
+def matched_inputs(case_path):
+    with case_path.open(newline="") as stream:
+        return {
+            (r["extra_sentences"], r["record"], r["variant"], r["arm"]):
+                tuple(r[key] for key in PAIR_FIELDS)
+            for r in csv.DictReader(stream)
+        }
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("cases", type=Path)
+    parser.add_argument("--summary", type=Path, required=True)
+    parser.add_argument("--transport", choices=("tcp", "unix"), default="tcp")
+    parser.add_argument("--compare-cases", type=Path)
+    parser.add_argument("--compare-summary", type=Path)
+    args = parser.parse_args()
+    if bool(args.compare_cases) != bool(args.compare_summary):
+        parser.error("--compare-cases and --compare-summary must be supplied together")
+    model, report = read_archive(args.cases, args.summary, args.transport)
+    if args.compare_cases:
+        other, comparison = read_archive(args.compare_cases, args.compare_summary, args.transport)
+        if model == other:
+            raise ValueError("cross-checkpoint verification requires one archive per pinned model")
+        if matched_inputs(args.cases) != matched_inputs(args.compare_cases):
+            raise ValueError("checkpoints disagree on matched prompts, prefix policy or QK payloads")
+        report = {model: report, other: comparison}
+    print(json.dumps(report, indent=2))
