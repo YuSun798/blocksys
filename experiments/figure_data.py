@@ -85,12 +85,28 @@ def plot_tables():
                   f"{total / 1000:,.1f}", f"{row['median_elapsed_ms']:.2f}",
                   f"{row['protected_correct']}/{row['prompts']}")
         compiled_rows.append(" & ".join((label, *values)) + r" \\")
+    scaling = json.loads((ROOT / "results/cross_layer_scale_summary.json").read_text())["summary"]
+    scale_rows = []
+    for _, panel in sorted(scaling.items(), key=lambda item: int(item[0])):
+        operator = panel["operator_only"]
+        joint = panel["joint"]
+        local = panel["local_rewrite"]
+        first, last = joint["range_tokens"]
+        scale_rows.append(" & ".join((
+            f"{first}--{last}",
+            f"{operator['mean_total_application_bytes'] / 1e6:.3f}",
+            f"{joint['mean_total_application_bytes'] / 1e6:.3f}",
+            f"{operator['median_elapsed_ms']:.2f}",
+            f"{joint['median_elapsed_ms']:.2f}",
+            f"{local['median_elapsed_ms']:.2f}",
+        )) + r" \\")
     return {
         "causal-sweep.dat": "\n".join(causal_rows) + "\n",
         "ablation-sweep.dat": "\n".join(ablation_rows) + "\n",
         "qk-rows.tex": "\n".join(qk_rows + [r"\bottomrule"]) + "\n",
         "composed-rows.tex": "\n".join(composed_rows + [r"\bottomrule"]) + "\n",
         "cross-layer-rows.tex": "\n".join(compiled_rows + [r"\bottomrule"]) + "\n",
+        "scale-rows.tex": "\n".join(scale_rows + [r"\bottomrule"]) + "\n",
         "head-rows.tex": "\n".join(head_rows + [r"\bottomrule"]) + "\n",
         "matched-rows.tex": "\n".join(matched_rows + [r"\bottomrule"]) + "\n",
     }

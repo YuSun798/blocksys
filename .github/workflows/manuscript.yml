@@ -39,6 +39,7 @@ jobs:
           python3 experiments/network_sensitivity.py --check
           python3 experiments/delay_sweep.py --check --output experiments/results
           python3 experiments/check_cross_layer_evidence.py experiments/results/cross_layer_rewrite_cases.csv --summary experiments/results/cross_layer_rewrite_summary.json --transport tcp
+          python3 experiments/check_cross_layer_scale.py experiments/results/cross_layer_scale_cases.csv --summary experiments/results/cross_layer_scale_summary.json --transport tcp
           python3 experiments/figure_data.py --check
           python3 experiments/check_manuscript_evidence.py main.pdf
       - name: Upload the PDF

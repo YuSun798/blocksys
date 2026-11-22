@@ -44,7 +44,10 @@ the original layout. A manually reordered control achieves the same
 traffic. The rewrite changes one of 48 four-way decisions. For each
 layout, every protected decision matches its own floating-point
 reference. A separate 96-prompt ablation measures disclosure at the
-attention boundary and the final output projection. The experiments
+attention boundary and the final output projection. Lengthening prompts
+with public text to 111 tokens leaves joint-policy peer openings unchanged
+on average, while total application traffic grows. Trusted local FP32 is
+faster at all tested lengths. The experiments
 protect one attention head and the output projection under trusted-dealer,
 semi-honest two-party computation. Other Transformer operations execute
 on the trusted client. These results measure how a task rewrite affects
@@ -392,13 +395,14 @@ rule rejects the lift when the note is private or the schema is
 order-sensitive. We exercise each of these two rejection cases on all
 12 schemas.
 
-\begin{figure}[!b]
+\begin{figure}[!t]
 \centering
-\input{figures/record-lift}
+\includegraphics[width=\linewidth]{figures/record-lift-nano-banana.jpg}
 \caption{Public-note lift for an order-insensitive record. The first
 private token determines the causal protection boundary. Moving the
 approved note ahead of that token lengthens the approved prefix without
-adding tokens. The schematic omits field labels and separators.}
+adding tokens. Teal marks the approved prefix. Field labels and separators
+are omitted. Gemini Nano Banana rendered the verified token order.}
 \label{fig:record-lift}
 \end{figure}
 
@@ -452,6 +456,54 @@ wrong-to-correct transition. This small synthetic workload measures
 the quality effect of reordering and leaves generalization to other
 tasks open.
 
+\subsection{Public Context Length and Trusted-Local Baselines}
+\label{sec:scale}
+We append zero, three or nine sentences to each public note and rerun
+the five policies, keeping every comparison within a fixed input length
+and record. At each length tier we add a fully local Pythia FP32 forward
+and a schema-aware parser for each layout. The FP32 arm uses the same
+tokenized input and four candidate rows as its protected counterpart.
+The parser reads the field directly from the serialized record. For each
+tier we measure 48 requests per arm with randomized arm order, yielding
+1,296 executions across all nine arms and three tiers. Timings exclude
+loading, compilation and reference checks. The Pythia arms start from
+tokenized inputs. The protected timing includes dealer work.
+
+\begin{table}[!ht]
+\centering
+\caption{Public-note length sweep on TCP loopback. Total application
+payload includes QK peer, dealer and client traffic and the output
+head. The local FP32 arm uses the same rewritten prompt as Joint and
+sends zero bytes.}
+\label{tab:scale}
+\small\renewcommand{\arraystretch}{1.12}\setlength{\tabcolsep}{5pt}
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+& \multicolumn{2}{c}{Mean payload (MB)} & \multicolumn{3}{c}{Median time (ms)}\\
+\cmidrule(lr){2-3}\cmidrule(l){4-6}
+Tokens & Operator-only & Joint & Operator-only & Joint & Local FP32\\
+\midrule
+\input{figures/scale-rows}
+\end{tabular}
+\end{table}
+
+Moving all added public text before the private field keeps the
+private suffix length fixed for each schema. Consequently, mean
+joint-policy peer openings stay at 25,600 bytes across tiers.
+At the largest tier, joint total traffic reaches 0.386 MB because
+the client sends full-length Q/K arrays and receives the whole
+causal triangle. For length $L$, the QK client channel alone carries
+$2048L+8L(L+1)$ bytes in this implementation.
+The local FP32 route is faster at every tier (Table~\ref{tab:scale}).
+At 105--111 tokens the joint policy takes 10.59 ms, versus 8.90 ms
+for local FP32 and 42.12 ms for operator-only offload.
+All protected decisions match the corresponding layout's FP32
+decisions. The local parser answers all 288 serialized inputs in
+about 4 microseconds per prepared input. For this task contract the
+parser is the fastest measured trusted execution path. The offload experiment
+isolates the effect of a task rewrite when the protected operators
+are required to run remotely.
+
 \section{Related Work}
 PPMI, PRISM, MINIM, Agentic-PPML and Split-and-Denoise separate
 public assistance from private state through distinct policies and threat
@@ -481,10 +533,17 @@ separate evaluation. The executable planner considers a single typed
 rewrite and an analytic cost for one operator. The general cost model
 includes cache reuse, placement and protocol choice.
 
+\paragraph{Code and data availability.}
+Scripts, checkpoint identifiers, per-request archives and verification
+commands are available at
+\href{https://github.com/YuSun798/blocksys}{github.com/YuSun798/blocksys}.
+
 \begin{credits}
 \subsubsection{\ackname} OpenAI Codex assisted with consolidating and
-editing the manuscript and preparing experiment code. The reported
-measurements come from executable evaluations and their archived records.
+editing the manuscript and preparing experiment code. Gemini Nano Banana
+rendered the conceptual record-layout schematic in
+Fig.~\ref{fig:record-lift} from the template specification.
+Measurements come from executable evaluations and archived records.
 \subsubsection{\discintname} The authors declare no competing interests relevant to this work.
 \end{credits}
 

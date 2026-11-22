@@ -267,3 +267,45 @@ cross-layout fixed-point score digests differ. The single changed
 decision is wrong-to-correct on these synthetic field-repetition tasks.
 The independent archive checker recomputes payloads and paired outcomes
 and checks plan selection, shape invariance and the reported summary.
+
+
+
+## Completed TCP context-length and trusted-local controls
+
+Using the same 12 schemas and four bindings, add zero, three or nine
+sentences to the public annotation and rerun all five protected policies.
+For each layout, also time local eager FP32 with the same prepared token
+tensor and author-approved candidate rows, and a deterministic parser with
+the same serialized record plus the public candidate map. Each tier has
+48 inputs and nine policy arms. The archived benchmark runs 1,296 arms
+on the same host, including 720 protected TCP executions. It excludes
+compilation, tokenization, connection setup and model loading from measured
+latency, and includes dealer preparation and delivery in protected time.
+The parser accepts the original or rewritten record and uses the typed
+schema to read the private field without access to the experiment target.
+
+The token ranges are 19–25, 46–52 and 105–111. Mean QK peer openings under
+the joint policy remain 25,600 bytes across tiers. Operator-only QK peer
+openings grow from 206,848 to 10,275,499 bytes. Joint total application
+traffic grows from 120,454 to 386,137 bytes, as the trusted client still
+sends full-length Q/K and receives the whole causal triangle. At the
+longest tier, operator-only, joint and local FP32 medians are 42.12,
+10.59 and 8.90 ms respectively. The independent checker recalculates
+per-request payload and protocol bounds, validates local zero traffic,
+and reconciles row-level accuracy and timing summaries. Local parsing
+gets 288/288 fields. The interaction between disclosure and offload is
+evaluated with a fixed number of private tokens and one protected QK head.
+
+## Record-layout illustration provenance
+
+Gemini Apps' Nano Banana image tool rendered a conceptual figure from
+the existing typed serialization and checked visual specification.
+The left-to-right original is Header, Private value, Public note, Query.
+The rewritten row is Header, Public note, Private value, Query. Teal
+marks the eligible prefix, orange the private value and gray remaining
+positions protected by causal dependency. The rendered asset has no
+measurements or unverified protocol arrows. Its original 2,016 × 528
+JPEG is figures/record-lift-nano-banana.jpg and has SHA-256
+c148de377852a9f27eac54f8cd00df03693e1b9ed1ed795f6e03523f93e881ad.
+Caption and acknowledgments disclose the use of Nano Banana.
+The numeric tables are generated directly from archived measurements.

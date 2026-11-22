@@ -102,6 +102,24 @@ protected-request elapsed time and per-schema planning time separately.
 The checker recomputes traffic and paired outcomes and validates the
 summary. Raw fingerprints and target IDs describe synthetic inputs.
 
+## Reproduce the context-length and local-control study
+
+Use the same pinned checkpoint and local environment.
+
+```bash
+TOKENIZERS_PARALLELISM=false python3 experiments/cross_layer_scale.py --checkpoint /path/to/snapshot --output ./scale-rerun --transport tcp
+python3 experiments/check_cross_layer_scale.py ./scale-rerun/cross_layer_scale_cases.csv --summary ./scale-rerun/cross_layer_scale_summary.json --transport tcp
+```
+
+This adds zero, three, or nine public sentences to the same record schemas.
+Five protected configurations, local FP32 for both layouts, and a local
+parser for both layouts each see the same 48 field bindings within a
+length tier. The post-tokenization timings include dealer work for the
+protected paths. The parser receives the same rendered record and a
+schema-derived candidate map. The application counters include all four
+protected channels. The archived cases validate the table, including
+zero network traffic for both trusted-local comparators.
+
 ## Reproduce the matched rewrite × island ablation
 
 Run from the repository root with Python 3.9+:
