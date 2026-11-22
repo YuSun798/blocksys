@@ -37,15 +37,16 @@ rewrites to the operator graph. We implement a restricted instance for
 structured records in Pythia-70M and Pythia-160M. The compiler moves a public note before
 a private field when the task schema permits reordering, derives the
 safe prefix from tokenization, and selects the layout with the fewest
-private attention products. Across 2,592 paired executions at three
+private attention products. Across 2,592 matched executions at three
 prompt lengths, the rewrite holds mean two-party attention openings at
 25,600 bytes for both checkpoints while total application traffic grows
 with sequence length. Local FP32 has lower median latency on loopback.
 Protected decisions match their own layout's FP32 predictions, but
 Pythia-160M field accuracy falls from 113/144 to 77/144 after reordering.
-A replay that admits rewrites only when all four allowed inputs preserve
-the original model decision retains its accuracy and rejects two thirds
-of the 160M rewrite candidates. The experiments protect one attention
+A live gate certifies the four allowed inputs before rewriting. It
+preserves all 288 paired decisions and rejects two thirds of the 160M
+rewrite candidates. We measure setup costs and project the reuse needed
+to recover them. The experiments protect one attention
 head and the output projection under trusted-dealer, semi-honest
 two-party computation. The trusted client runs the remaining operations.
 The results separate reductions in secure work from model-specific
@@ -54,7 +55,11 @@ quality effects of changing input order.
 \end{abstract}
 
 \section{Introduction}
-Decentralized LLM-serving networks aggregate heterogeneous GPUs, but open participation makes prompt and activation privacy difficult: a peer receiving a private value in plaintext can retain or redistribute it. P2P model-serving platforms such as Petals and PlanetServe address access to compute \cite{petals,planetserve}; privacy-aware routing and plan caching address aspects of request placement and reuse \cite{ppmi,prism,apc}. Cryptographic private inference protects values but can multiply communication and latency, particularly for nonlinearity-intensive Transformers \cite{bolt,puma}.
+P2P serving pools heterogeneous compute~\cite{petals,planetserve},
+where peers may retain plaintext prompts and activations. Privacy-aware
+routing and plan caching address placement and reuse~\cite{ppmi,prism,apc}.
+Cryptographic inference protects values at a communication and latency
+cost~\cite{bolt,puma}.
 
 \srcA{} rewrites reasoning tasks into public parameterized programs and
 client-side bindings. \srcB{} selects operator subgraphs for secure
@@ -64,16 +69,11 @@ For example, moving a public note ahead of a private field can increase the
 prefix that has no causal dependency on that field, subject to authorization
 and the task's output contract.
 
-We specify the policy and provenance carried across this handoff and
-formulate planning under a fixed trust model. We examine causal dependence
-in random and pretrained Transformers and isolate the effects of task
-rewriting and operator placement in a matched arithmetic benchmark.
-In a client-side Pythia forward, we compose two protected operators and
-measure each disclosure decision on identical prompts. A second experiment
-implements the handoff for typed records, automatically selects a layout
-using its protected QK product count, and compares it with operator-only,
-rewrite-only, and hand-written controls. Two checkpoints expose different
-accuracy effects on the same rewrites.
+We specify this handoff under a fixed trust model and test causal
+dependence and placement with matched controls. Two protected operators
+compose in a Pythia forward. On typed records, the QK cost selects a
+layout, and a timed quality gate checks its decisions. Two checkpoints
+expose different accuracy effects on the same rewrites.
 
 \section{Threat Model and Execution Semantics}
 \paragraph{Participants and disclosure.}
@@ -212,10 +212,19 @@ and operator choices change its work on matched requests.
 
 \section{CPU Diagnostic: Where Secrets Contaminate Causal Attention}\label{sec:cpu}
 \paragraph{Question and implementation.}
-Does labeling only the \emph{secret token positions} correctly identify the states that must be kept out of plaintext P2P execution? We ran a CPU diagnostic using PyTorch 2.10 and reproduced its counts on Apple Silicon with PyTorch 2.8: a randomly initialized, frozen, two-layer causal Transformer ($d=32$, four heads, FFN width 64, sequence length 16). It uses dense masked self-attention, LayerNorm and GELU; \emph{it is not the pretrained GPT-2 or cryptographic mini-GPT used by ShareRoute}. We varied the 0/25/50/75/100\% private-input fractions and three secret placements (prefix, suffix, uniformly sampled interleaving). With four model seeds and 12 perturbations/cell, this yields $5\times3\times4\times12=720$ paired input executions. Each pair changes only secret-position vectors; 16 output states are compared per pair. The source and raw per-case CSV are included in the repository, along with the command to repeat the test.
+We perturb only secret-position vectors in a random frozen two-layer
+causal Transformer ($d=32$, four heads, FFN width 64, length 16). We test
+0/25/50/75/100\% private fractions and prefix, suffix and uniformly
+sampled interleaved placements. Four seeds and 12 perturbations per cell
+give 720 pairs and 16 state comparisons per pair. PyTorch 2.10 CPU and
+PyTorch 2.8 Apple Silicon reproduce the same counts.
 
 \paragraph{Results.}
-The first secret fixes the public prefix under dense causal attention. Across 11,520 comparisons, every state labeled public by Eq.~\eqref{eq:prefix} stayed at or below the $10^{-6}$ drift threshold. Every state labeled private-dependent changed under the tested perturbations. A naive detector treating all non-secret input positions as public missed 2,133 changed output positions across the same 720 pairs. At 25\% secret tokens, putting secrets at the \emph{end} leaves 75\% of states public, putting them at the \emph{beginning} leaves none public, and randomly interleaving them leaves only 15.0\% public on average. The pattern holds without any MPC implementation or assumed communication-cost model: disclosure safety cannot be inferred from the scalar input-secret fraction alone.
+Across 11,520 comparisons, states labeled public by Eq.~\eqref{eq:prefix}
+stay within $10^{-6}$ drift and every private-dependent state changes.
+A position-only rule misses 2,133 changed outputs. At 25\% private
+tokens, a suffix leaves 75\% of states public, a prefix leaves none
+and random placement leaves 15.0\% public on average.
 
 Figure~\ref{fig:causal-sweep} extends the comparison across all tested
 private fractions. The public-output fraction computed from sampled dependency labels tracks the analytic expectation from Eq.~\eqref{eq:prefix} and the public-gap
@@ -337,32 +346,22 @@ candidate projections match the exact ring references. Maximum QK
 error against floating scores is $9.73\times10^{-5}$.
 
 \paragraph{Composed forward and controls.}
-Each input runs the same Pythia forward under five preassigned policies
-in randomized order.
-The client inserts reconstructed scores into the native causal mask
-and softmax path before the downstream layers. It sends shares of
-the resulting final hidden state to the output workers. We cross
-QK prefix disclosure with authorized head-row restriction, and add
-the same prompts with a private candidate selector. We use complete
-prefill for every policy. Prefix KV reuse was slower in the isolated
-two-prompt test. Over established loopback sockets, timings include attention
-preprocessing, model execution and reconstruction. Setup and reference
-checks are excluded.
+We run five policies in randomized order. Reconstructed scores feed
+native masking and softmax, then the client shares the final hidden
+state for projection. We cross QK prefix disclosure with head-row
+restriction and add a private-selector control. All runs prefill
+completely over established sockets. Timings include preprocessing,
+execution and reconstruction and exclude reference checks.
 
-All 480 runs reproduce the fixed-point QK and candidate-projection
-references. The five policies yield identical candidate scores for each
-prompt and match all 96 constrained FP32 decisions. They correctly repeat
-88 input fields. The maximum absolute candidate logit error is below 0.01114.
-Table~\ref{tab:composed} reports both stages' traffic separately.
-QK client input and output payload have a median of 44,320 bytes in
-every arm. The private-selector policy preserves the attention savings
-and returns a full head without transmitting candidate IDs. A visible
-schema may still identify the candidates. Relative to the rows-only arm,
-the joint policy reduces total application traffic by a median paired factor
-of 5.55 and elapsed time by 1.19. The traffic calculation sums the attention
-peer, client and dealer channels and the head channel per request.
-A direct local projection is faster than either TCP projection in the
-isolated head test. The experiment assumes that these operators are offloaded.
+All 480 runs match the fixed-point references and all 96 FP32 decisions.
+Every policy recovers 88 gold fields. Maximum absolute candidate logit
+error is below 0.01114. The client QK channel has a median of 44,320
+bytes in each arm.
+The private selector returns the full head without sending IDs. A
+visible schema may identify the candidates. Relative to rows-only,
+Joint reduces total application bytes by paired median $5.55\times$
+and time by $1.19\times$ (Table~\ref{tab:composed}). Direct local
+projection outperforms both TCP projections in isolation.
 
 \begin{table}[t]
 \centering
@@ -380,14 +379,11 @@ Policy & QK peer (B) & Dealer (B) & Head (B) & Elapsed (ms)\\
 \end{table}
 
 \paragraph{Controlled propagation delay.}
-For the same 96 prompts we inject half-RTT sender waits at ordered
-transfers over TCP loopback, once per client fan-out. Across 576 runs,
-scores and payloads for each prompt and policy are invariant to the delay
-setting. With nominal RTTs of 0, 5 and 20 ms, the full-to-joint median paired
-ratios are 2.97, 1.40 and 1.18. At 20 ms the paired increments are
-132.32 and 119.67 ms, above the 80 ms obtained from four ideal RTTs.
-This application-layer delay treatment includes host timer and scheduling
-overhead.
+Across 576 loopback runs we inject half-RTT sender waits, once per client
+fan-out. Scores and bytes for each prompt and policy are invariant. At
+nominal RTTs 0, 5 and 20 ms, paired full-to-joint time ratios are 2.97,
+1.40 and 1.18. At 20 ms the paired increments are 132.32 and 119.67 ms,
+above the four-RTT 80 ms model, with timer and scheduling overhead.
 
 \section{Compiling a Task Rewrite into Protected Pythia}
 \label{sec:compiled}
@@ -514,14 +510,46 @@ predictions to wrong and four wrong predictions to correct. Accuracy
 falls from 113/144 to 77/144. The three tiers reuse semantic records, so
 these counts describe the paired samples without assuming independence.
 
-We replay a finite-domain gate that permits the lift when the two FP32
-layouts agree for all four publicly allowed bindings of a schema, and
-uses the original layout otherwise. On 160M, this admits 5, 5 and 2
-of 12 schemas at the three tiers, preserving all original decisions
-including baseline errors. The median paired byte ratio is 1.00 at each
-tier. Summed traffic falls by 30\%, 40\% and 16\%. This replay measures
-the traffic tradeoff under exhaustive agreement. Validation latency
-and extension to open-ended bindings remain unevaluated.
+\paragraph{Live layout certification.}
+Before dispatch, the gate compiles both layouts and runs eight native
+FP32 forwards covering the four public bindings. It caches a rewrite
+decision for the fixed checkpoint, schema and tier. The rewrite must
+agree with the original choice for every binding and reduce private QK
+work. A failed certificate retains the original layout with selective
+QK. Three repetitions per case give 216 certificate timings. We then
+execute fresh TCP forwards for the two routes on each binding in
+randomized pair order (576 runs). Warm times include tensor preparation
+and protected execution. Loading, socket setup and ring checks sit
+outside the timers.
+
+All 288 pairs preserve the original answer, including baseline errors.
+On 160M, median paired byte savings are zero across tiers and summed
+traffic falls by 30\%, 40\% and 16\%. We project the number of requests to
+recover setup as the ceiling of the median per-schema certificate time
+divided by its mean paired warm time saving. The projection applies to
+admitted schemas with positive measured savings and assumes stable
+reuse. The longest tier gives medians of 3 requests on 70M and 9 on 160M
+(Table~\ref{tab:gate}). The 160M median warm ratio there remains near
+one because only two schemas pass. Two of five admitted 160M schemas
+at the shortest tier have no positive measured savings. Open-ended
+binding domains are outside this certificate's scope.
+
+\begin{table}[!ht]
+\centering
+\caption{Timed layout certification on TCP loopback. Positive counts
+admitted schemas with positive mean warm savings. Setup is the median
+of per-schema median certificate times. The warm ratio is the median
+paired operator-only to gated time over all 48 requests. Break-even is
+the projected median request count over positive schemas.}
+\label{tab:gate}
+\small\renewcommand{\arraystretch}{1.08}\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}llrrrrr@{}}
+\toprule
+Model & Tokens & Admitted & Positive & Setup (ms) & Warm ratio & Break-even\\
+\midrule
+\input{figures/gate-rows}
+\end{tabular}
+\end{table}
 
 \section{Related Work}
 PPMI, PRISM, MINIM, Agentic-PPML and Split-and-Denoise separate

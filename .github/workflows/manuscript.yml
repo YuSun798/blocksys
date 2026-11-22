@@ -42,6 +42,7 @@ jobs:
           python3 experiments/check_cross_layer_scale.py experiments/results/cross_layer_scale_cases.csv --summary experiments/results/cross_layer_scale_summary.json --transport tcp --compare-cases experiments/results/cross_layer_scale_160m_cases.csv --compare-summary experiments/results/cross_layer_scale_160m_summary.json
           python3 experiments/layout_quality_gate.py experiments/results/cross_layer_scale_cases.csv
           python3 experiments/layout_quality_gate.py experiments/results/cross_layer_scale_160m_cases.csv
+          python3 experiments/check_layout_quality_gate.py experiments/results --transport tcp
           python3 experiments/figure_data.py --check
           python3 experiments/check_manuscript_evidence.py main.pdf
       - name: Upload the PDF

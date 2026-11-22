@@ -2,6 +2,7 @@
 import argparse
 import csv
 import json
+import statistics
 from pathlib import Path
 
 from loopback_2pc import WIDTHS
@@ -86,11 +87,13 @@ def plot_tables():
                   f"{row['protected_correct']}/{row['prompts']}")
         compiled_rows.append(" & ".join((label, *values)) + r" \\")
     scale_rows = []
+    scale_summaries = {}
     for checkpoint, suffix in (("70M", ""), ("160M", "_160m")):
         if scale_rows:
             scale_rows.append(r"\addlinespace")
         path = ROOT / f"results/cross_layer_scale{suffix}_summary.json"
         scaling = json.loads(path.read_text())["summary"]
+        scale_summaries[checkpoint.lower()] = scaling
         for index, tier in enumerate(sorted(scaling, key=int)):
             panel = scaling[tier]
             operator = panel["operator_only"]
@@ -108,6 +111,28 @@ def plot_tables():
                 str(operator["correct"]),
                 str(joint["correct"]),
             )) + r" \\")
+    path = ROOT / "results/layout_gate_benchmark_summary.json"
+    gate = json.loads(path.read_text())["summary"]
+    gate_rows = []
+    for model in ("70m", "160m"):
+        if gate_rows:
+            gate_rows.append(r"\addlinespace")
+        for index, tier in enumerate(sorted(gate[model], key=int)):
+            row = gate[model][tier]
+            projections = [
+                stats["projected_break_even_requests"] for stats in row["schemas"].values()
+                if stats["projected_break_even_requests"] is not None
+            ]
+            first, last = scale_summaries[model][tier]["joint"]["range_tokens"]
+            gate_rows.append(" & ".join((
+                model.upper() if index == 0 else "",
+                f"{first}--{last}",
+                f"{row['admitted_schemas']}/{len(row['schemas'])}",
+                str(len(projections)),
+                f"{row['median_certificate_ms']:.2f}",
+                f"{row['median_paired_baseline_over_gated']:.3f}",
+                f"{statistics.median(projections):g}" if projections else r"\textemdash",
+            )) + r" \\")
     return {
         "causal-sweep.dat": "\n".join(causal_rows) + "\n",
         "ablation-sweep.dat": "\n".join(ablation_rows) + "\n",
@@ -115,6 +140,7 @@ def plot_tables():
         "composed-rows.tex": "\n".join(composed_rows + [r"\bottomrule"]) + "\n",
         "cross-layer-rows.tex": "\n".join(compiled_rows + [r"\bottomrule"]) + "\n",
         "scale-rows.tex": "\n".join(scale_rows + [r"\bottomrule"]) + "\n",
+        "gate-rows.tex": "\n".join(gate_rows + [r"\bottomrule"]) + "\n",
         "head-rows.tex": "\n".join(head_rows + [r"\bottomrule"]) + "\n",
         "matched-rows.tex": "\n".join(matched_rows + [r"\bottomrule"]) + "\n",
     }

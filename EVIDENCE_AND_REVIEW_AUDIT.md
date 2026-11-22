@@ -343,8 +343,9 @@ For 160M this selects the lift on 5/12, 5/12 and 2/12 schema instances
 and preserves the original decisions. The median paired byte ratio is
 1.00 at each tier, while aggregate bytes fall by about 30%, 40% and 16%.
 For 70M the gate admits 11/12, 12/12 and 12/12. These are archive replays
-under a finite exhaustive domain and pinned checkpoint. Preparation
-latency and guard behavior for open-ended fields remain unevaluated.
+under a finite exhaustive domain and pinned checkpoint. The replay
+contains no preparation timings. The live study below measures setup
+for the finite binding domain.
 
 ## Accessible vector figure handoff
 
@@ -356,3 +357,48 @@ Descriptions for all three figures are embedded in the official
 LNCS source. The class generates a separate description list at build
 time. Bibliography items are ordered by first citation, and every grouped
 citation lists reference numbers in ascending order.
+
+
+
+## Live certification, protected routing and projected reuse
+
+In a new TCP run, both pinned checkpoints build a public-domain
+certificate before dispatch. Each certificate compiles both layouts and
+evaluates all four public bindings in native FP32. The planner selects
+the rewrite only when the four decisions agree and private QK work
+decreases. It otherwise uses the original layout with selective QK.
+Three timed repetitions for each of 72 model, tier and schema groups
+produce 216 certificates and 1,728 native forward calls within the
+timed regions. The warm path sends each binding once through each
+route in randomized pair order. All 576 protected runs are new, with
+fresh correlated randomness. All 288 paired outputs match.
+
+| Checkpoint | Tokens | Admitted | Positive savings among admitted | Median setup (ms) | Warm paired ratio | Conditional break-even median |
+|---|---:|---:|---:|---:|---:|---:|
+| 70M | 19–25 | 11/12 | 11 | 31.89 | 1.093 | 56 |
+| 70M | 46–52 | 12/12 | 12 | 40.52 | 1.788 | 9 |
+| 70M | 105–111 | 12/12 | 12 | 69.78 | 4.155 | 3 |
+| 160M | 19–25 | 5/12 | 3 | 111.45 | 1.002 | 229 |
+| 160M | 46–52 | 5/12 | 5 | 150.95 | 1.057 | 30 |
+| 160M | 105–111 | 2/12 | 2 | 253.37 | 1.002 | 9 |
+
+Warm ratios summarize every matched binding, including fallback cases
+where the two routes execute the same layout. The projected break-even
+divides each eligible schema's median setup by its mean paired warm
+time saving and rounds up. Setup excludes checkpoint and tokenizer
+loading and includes prompt compilation and eight native forwards.
+Warm time includes tensor preparation and protected execution and
+excludes connection setup and independent exactness checks.
+The projections assume enough repeated requests with a stable mixture
+of bindings and costs. Since per-schema warm data has four pairs, the
+shortest 160M tier has especially noisy projections. Only three of its
+five admitted schemas give positive mean savings. The finite projections
+there range from 135 to 1,296 requests. The other two have no observed
+break-even. All rejected schemas incurred setup in the experiment.
+
+The archived summary records the full timing decomposition, selected
+layout and raw digests. The independent verifier checks against the
+canonical matched inputs, confirms all eight model decisions per
+certificate and recomputes protocol bytes and projected counts. These
+are finite-domain, one-host measurements using two checkpoints in
+one model family.

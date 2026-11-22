@@ -1,0 +1,687 @@
+{
+  "models": {
+    "70m": {
+      "model": "EleutherAI/pythia-70m-deduped",
+      "revision": "e93a9faa9c77e5d09219f6c868bfc7a1bd65593c",
+      "hidden_width": 512,
+      "head_width": 64,
+      "artifact_sha256": {
+        "config.json": "002050231a9b1ec3ac77aa6b9b3bbdc4d923f4068a7dd33b8da72a9bd6ad9a43",
+        "tokenizer.json": "c24618a1b3e6a38167beff1c72cffd126c3a66254347304b50547d12c5f25624",
+        "tokenizer_config.json": "70e38394e494931c6f773ba41e19460dd4436526b852207367f04341b4066d3f",
+        "special_tokens_map.json": "6f50ab5a5a509a1c309d6171f339b196a900dc9c99ad0408ff23bb615fdae7ad",
+        "model.safetensors": "3da388330e4549156d76b58d6d268c63cd005e9336b4f4d2d378421e7b7a33fd"
+      }
+    },
+    "160m": {
+      "model": "EleutherAI/pythia-160m-deduped",
+      "revision": "582159a2dfe3e712a8d47ae83dec95ae3bde8e7e",
+      "hidden_width": 768,
+      "head_width": 64,
+      "artifact_sha256": {
+        "config.json": "76eb275107220e450d31258f792a2efcbee109d8b62ae0088260057dec06362f",
+        "tokenizer.json": "c24618a1b3e6a38167beff1c72cffd126c3a66254347304b50547d12c5f25624",
+        "tokenizer_config.json": "70e38394e494931c6f773ba41e19460dd4436526b852207367f04341b4066d3f",
+        "special_tokens_map.json": "6f50ab5a5a509a1c309d6171f339b196a900dc9c99ad0408ff23bb615fdae7ad",
+        "model.safetensors": "bbaae5c00917b163baa499fc8eb64859ee0c850c5fdecfc32f4d70dc07213575"
+      }
+    }
+  },
+  "transport": "TCP loopback",
+  "platform": "macOS-26.5.2-arm64-arm-64bit",
+  "python": "3.9.6",
+  "threads": 2,
+  "torch": "2.8.0",
+  "numpy": "2.0.2",
+  "transformers": "4.52.4",
+  "ring_bits": 64,
+  "scale": 65536,
+  "layer_index": 1,
+  "head_index": 0,
+  "certificate_repeats": 3,
+  "discarded_certificate_warmups_per_model_tier": 1,
+  "discarded_request_warmups_per_model_tier_per_arm": 1,
+  "timing_scope": {
+    "certificate": "schema preparation, all eight native forwards and gate comparison; checkpoint and tokenizer loading excluded",
+    "requests": "finite-domain lookup, token tensor preparation, protected prefill and output projection including dealer; connections and independent ring checks excluded",
+    "amortization": "projection from per-schema median certificate and mean paired warm saving; reported only for admitted routes with positive savings"
+  },
+  "certificates_sha256": "3c3f7dd61ab058ef1757a799ca0a57e768b02841fef0fa15068d076b6d31368d",
+  "requests_sha256": "56b31b5168cc404188a047a65165a83749aad5cf91ea566a830b00fed3abc445",
+  "summary": {
+    "160m": {
+      "0": {
+        "schemas": {
+          "Airfield": {
+            "admitted": 0,
+            "median_certificate_ns": 110724459,
+            "paired_requests": 4,
+            "total_paired_saving_ns": 605585,
+            "projected_break_even_requests": null
+          },
+          "Bakery": {
+            "admitted": 0,
+            "median_certificate_ns": 118903875,
+            "paired_requests": 4,
+            "total_paired_saving_ns": 1895335,
+            "projected_break_even_requests": null
+          },
+          "Cafe": {
+            "admitted": 0,
+            "median_certificate_ns": 107071417,
+            "paired_requests": 4,
+            "total_paired_saving_ns": -1880333,
+            "projected_break_even_requests": null
+          },
+          "Campsite": {
+            "admitted": 0,
+            "median_certificate_ns": 120444583,
+            "paired_requests": 4,
+            "total_paired_saving_ns": -1602833,
+            "projected_break_even_requests": null
+          },
+          "Cinema": {
+            "admitted": 1,
+            "median_certificate_ns": 115564625,
+            "paired_requests": 4,
+            "total_paired_saving_ns": 356875,
+            "projected_break_even_requests": 1296
+          },
+          "Classroom": {
+            "admitted": 1,
+            "median_certificate_ns": 109704083,
+            "paired_requests": 4,
+            "total_paired_saving_ns": 1921668,
+            "projected_break_even_requests": 229
+          },
+          "Exhibit": {
+            "admitted": 0,
+            "median_certificate_ns": 112250167,
+            "paired_requests": 4,
+            "total_paired_saving_ns": 901667,
+            "projected_break_even_requests": null
+          },
+          "Museum": {
+            "admitted": 1,
+            "median_certificate_ns": 102514208,
+            "paired_requests": 4,
+            "total_paired_saving_ns": -470165,
+            "projected_break_even_requests": null
+          },
+          "Orchestra": {
+            "admitted": 1,
+            "median_certificate_ns": 116419292,
+            "paired_requests": 4,
+            "total_paired_saving_ns": -531415,
+            "projected_break_even_requests": null
+          },
+          "Passport": {
+            "admitted": 1,
+            "median_certificate_ns": 101635333,
+            "paired_requests": 4,
+            "total_paired_saving_ns": 3020251,
+            "projected_break_even_requests": 135
+          },
+          "Shelter": {
+            "admitted": 0,
+            "median_certificate_ns": 112174958,
+            "paired_requests": 4,
+            "total_paired_saving_ns": 816833,
+            "projected_break_even_requests": null
+          },
+          "Tournament": {
+            "admitted": 0,
+            "median_certificate_ns": 100769916,
+            "paired_requests": 4,
+            "total_paired_saving_ns": -1376336,
+            "projected_break_even_requests": null
+          }
+        },
+        "admitted_schemas": 5,
+        "prompts": 48,
+        "same_choices": 48,
+        "correct": {
+          "operator_only": 39,
+          "gated": 39
+        },
+        "median_certificate_ms": 111.4497085,
+        "median_warm_ms": {
+          "operator_only": 15.2128755,
+          "gated": 15.1696255
+        },
+        "median_paired_baseline_over_gated": 1.0024268345042047,
+        "mean_total_application_bytes": {
+          "operator_only": 577670,
+          "gated": 402736.6666666667
+        }
+      },
+      "3": {
+        "schemas": {
+          "Airfield": {
+            "admitted": 0,
+            "median_certificate_ns": 154608125,
+            "paired_requests": 4,
+            "total_paired_saving_ns": -2029085,
+            "projected_break_even_requests": null
+          },
+          "Bakery": {
+            "admitted": 1,
+            "median_certificate_ns": 149963667,
+            "paired_requests": 4,
+            "total_paired_saving_ns": 21833001,
+            "projected_break_even_requests": 28
+          },
+          "Cafe": {
+            "admitted": 0,
+            "median_certificate_ns": 157906791,
+            "paired_requests": 4,
+            "total_paired_saving_ns": 508041,
+            "projected_break_even_requests": null
+          },
+          "Campsite": {
+            "admitted": 0,
+            "median_certificate_ns": 158396042,
+            "paired_requests": 4,
+            "total_paired_saving_ns": 2403127,
+            "projected_break_even_requests": null
+          },
+          "Cinema": {
+            "admitted": 0,
+            "median_certificate_ns": 156765167,
+            "paired_requests": 4,
+            "total_paired_saving_ns": 1441749,
+            "projected_break_even_requests": null
+          },
+          "Classroom": {
+            "admitted": 1,
+            "median_certificate_ns": 145700833,
+            "paired_requests": 4,
+            "total_paired_saving_ns": 17904416,
+            "projected_break_even_requests": 33
+          },
+          "Exhibit": {
+            "admitted": 0,
+            "median_certificate_ns": 148124750,
+            "paired_requests": 4,
+            "total_paired_saving_ns": 1909831,
+            "projected_break_even_requests": null
+          },
+          "Museum": {
+            "admitted": 1,
+            "median_certificate_ns": 151930333,
+            "paired_requests": 4,
+            "total_paired_saving_ns": 19120124,
+            "projected_break_even_requests": 32
+          },
+          "Orchestra": {
+            "admitted": 1,
+            "median_certificate_ns": 148282834,
+            "paired_requests": 4,
+            "total_paired_saving_ns": 20053253,
+            "projected_break_even_requests": 30
+          },
+          "Passport": {
+            "admitted": 1,
+            "median_certificate_ns": 148816625,
+            "paired_requests": 4,
+            "total_paired_saving_ns": 21170625,
+            "projected_break_even_requests": 29
+          },
+          "Shelter": {
+            "admitted": 0,
+            "median_certificate_ns": 152876042,
+            "paired_requests": 4,
+            "total_paired_saving_ns": -357584,
+            "projected_break_even_requests": null
+          },
+          "Tournament": {
+            "admitted": 0,
+            "median_certificate_ns": 144776542,
+            "paired_requests": 4,
+            "total_paired_saving_ns": 1750163,
+            "projected_break_even_requests": null
+          }
+        },
+        "admitted_schemas": 5,
+        "prompts": 48,
+        "same_choices": 48,
+        "correct": {
+          "operator_only": 39,
+          "gated": 39
+        },
+        "median_certificate_ms": 150.947,
+        "median_warm_ms": {
+          "operator_only": 24.4755,
+          "gated": 23.689063
+        },
+        "median_paired_baseline_over_gated": 1.0570592998399784,
+        "mean_total_application_bytes": {
+          "operator_only": 4472978,
+          "gated": 2695058
+        }
+      },
+      "9": {
+        "schemas": {
+          "Airfield": {
+            "admitted": 0,
+            "median_certificate_ns": 252045500,
+            "paired_requests": 4,
+            "total_paired_saving_ns": -4042498,
+            "projected_break_even_requests": null
+          },
+          "Bakery": {
+            "admitted": 0,
+            "median_certificate_ns": 254668083,
+            "paired_requests": 4,
+            "total_paired_saving_ns": -3816667,
+            "projected_break_even_requests": null
+          },
+          "Cafe": {
+            "admitted": 0,
+            "median_certificate_ns": 253601875,
+            "paired_requests": 4,
+            "total_paired_saving_ns": -738167,
+            "projected_break_even_requests": null
+          },
+          "Campsite": {
+            "admitted": 0,
+            "median_certificate_ns": 238066583,
+            "paired_requests": 4,
+            "total_paired_saving_ns": 3855294,
+            "projected_break_even_requests": null
+          },
+          "Cinema": {
+            "admitted": 0,
+            "median_certificate_ns": 254314291,
+            "paired_requests": 4,
+            "total_paired_saving_ns": -135501,
+            "projected_break_even_requests": null
+          },
+          "Classroom": {
+            "admitted": 1,
+            "median_certificate_ns": 255385208,
+            "paired_requests": 4,
+            "total_paired_saving_ns": 119370333,
+            "projected_break_even_requests": 9
+          },
+          "Exhibit": {
+            "admitted": 0,
+            "median_certificate_ns": 240758167,
+            "paired_requests": 4,
+            "total_paired_saving_ns": 3163958,
+            "projected_break_even_requests": null
+          },
+          "Museum": {
+            "admitted": 0,
+            "median_certificate_ns": 254605959,
+            "paired_requests": 4,
+            "total_paired_saving_ns": -3143750,
+            "projected_break_even_requests": null
+          },
+          "Orchestra": {
+            "admitted": 0,
+            "median_certificate_ns": 253144792,
+            "paired_requests": 4,
+            "total_paired_saving_ns": 2801082,
+            "projected_break_even_requests": null
+          },
+          "Passport": {
+            "admitted": 1,
+            "median_certificate_ns": 253083709,
+            "paired_requests": 4,
+            "total_paired_saving_ns": 121207747,
+            "projected_break_even_requests": 9
+          },
+          "Shelter": {
+            "admitted": 0,
+            "median_certificate_ns": 253674625,
+            "paired_requests": 4,
+            "total_paired_saving_ns": -6103165,
+            "projected_break_even_requests": null
+          },
+          "Tournament": {
+            "admitted": 0,
+            "median_certificate_ns": 237299125,
+            "paired_requests": 4,
+            "total_paired_saving_ns": 1529748,
+            "projected_break_even_requests": null
+          }
+        },
+        "admitted_schemas": 2,
+        "prompts": 48,
+        "same_choices": 48,
+        "correct": {
+          "operator_only": 35,
+          "gated": 35
+        },
+        "median_certificate_ms": 253.3733335,
+        "median_warm_ms": {
+          "operator_only": 64.0255415,
+          "gated": 63.9571665
+        },
+        "median_paired_baseline_over_gated": 1.001917532334415,
+        "mean_total_application_bytes": {
+          "operator_only": 26014979.333333332,
+          "gated": 21841752.666666668
+        }
+      }
+    },
+    "70m": {
+      "0": {
+        "schemas": {
+          "Airfield": {
+            "admitted": 1,
+            "median_certificate_ns": 31562709,
+            "paired_requests": 4,
+            "total_paired_saving_ns": 2496291,
+            "projected_break_even_requests": 51
+          },
+          "Bakery": {
+            "admitted": 1,
+            "median_certificate_ns": 29933833,
+            "paired_requests": 4,
+            "total_paired_saving_ns": 3309667,
+            "projected_break_even_requests": 37
+          },
+          "Cafe": {
+            "admitted": 1,
+            "median_certificate_ns": 32741125,
+            "paired_requests": 4,
+            "total_paired_saving_ns": 1490248,
+            "projected_break_even_requests": 88
+          },
+          "Campsite": {
+            "admitted": 1,
+            "median_certificate_ns": 32400333,
+            "paired_requests": 4,
+            "total_paired_saving_ns": 2675667,
+            "projected_break_even_requests": 49
+          },
+          "Cinema": {
+            "admitted": 1,
+            "median_certificate_ns": 32851625,
+            "paired_requests": 4,
+            "total_paired_saving_ns": 2056124,
+            "projected_break_even_requests": 64
+          },
+          "Classroom": {
+            "admitted": 1,
+            "median_certificate_ns": 31009750,
+            "paired_requests": 4,
+            "total_paired_saving_ns": 1736125,
+            "projected_break_even_requests": 72
+          },
+          "Exhibit": {
+            "admitted": 0,
+            "median_certificate_ns": 31529500,
+            "paired_requests": 4,
+            "total_paired_saving_ns": 226917,
+            "projected_break_even_requests": null
+          },
+          "Museum": {
+            "admitted": 1,
+            "median_certificate_ns": 32214375,
+            "paired_requests": 4,
+            "total_paired_saving_ns": 1623125,
+            "projected_break_even_requests": 80
+          },
+          "Orchestra": {
+            "admitted": 1,
+            "median_certificate_ns": 33588916,
+            "paired_requests": 4,
+            "total_paired_saving_ns": 2610417,
+            "projected_break_even_requests": 52
+          },
+          "Passport": {
+            "admitted": 1,
+            "median_certificate_ns": 28594791,
+            "paired_requests": 4,
+            "total_paired_saving_ns": 2055292,
+            "projected_break_even_requests": 56
+          },
+          "Shelter": {
+            "admitted": 1,
+            "median_certificate_ns": 32683458,
+            "paired_requests": 4,
+            "total_paired_saving_ns": 3413208,
+            "projected_break_even_requests": 39
+          },
+          "Tournament": {
+            "admitted": 1,
+            "median_certificate_ns": 28812667,
+            "paired_requests": 4,
+            "total_paired_saving_ns": 792751,
+            "projected_break_even_requests": 146
+          }
+        },
+        "admitted_schemas": 11,
+        "prompts": 48,
+        "same_choices": 48,
+        "correct": {
+          "operator_only": 47,
+          "gated": 47
+        },
+        "median_certificate_ms": 31.888542,
+        "median_warm_ms": {
+          "operator_only": 5.38773,
+          "gated": 4.982125
+        },
+        "median_paired_baseline_over_gated": 1.0930742064414392,
+        "mean_total_application_bytes": {
+          "operator_only": 573574,
+          "gated": 158854
+        }
+      },
+      "3": {
+        "schemas": {
+          "Airfield": {
+            "admitted": 1,
+            "median_certificate_ns": 41196125,
+            "paired_requests": 4,
+            "total_paired_saving_ns": 19273669,
+            "projected_break_even_requests": 9
+          },
+          "Bakery": {
+            "admitted": 1,
+            "median_certificate_ns": 41318042,
+            "paired_requests": 4,
+            "total_paired_saving_ns": 21057670,
+            "projected_break_even_requests": 8
+          },
+          "Cafe": {
+            "admitted": 1,
+            "median_certificate_ns": 38458834,
+            "paired_requests": 4,
+            "total_paired_saving_ns": 17430333,
+            "projected_break_even_requests": 9
+          },
+          "Campsite": {
+            "admitted": 1,
+            "median_certificate_ns": 41941000,
+            "paired_requests": 4,
+            "total_paired_saving_ns": 23220915,
+            "projected_break_even_requests": 8
+          },
+          "Cinema": {
+            "admitted": 1,
+            "median_certificate_ns": 38686375,
+            "paired_requests": 4,
+            "total_paired_saving_ns": 22317210,
+            "projected_break_even_requests": 7
+          },
+          "Classroom": {
+            "admitted": 1,
+            "median_certificate_ns": 37813000,
+            "paired_requests": 4,
+            "total_paired_saving_ns": 16845750,
+            "projected_break_even_requests": 9
+          },
+          "Exhibit": {
+            "admitted": 1,
+            "median_certificate_ns": 38719500,
+            "paired_requests": 4,
+            "total_paired_saving_ns": 19930794,
+            "projected_break_even_requests": 8
+          },
+          "Museum": {
+            "admitted": 1,
+            "median_certificate_ns": 40264750,
+            "paired_requests": 4,
+            "total_paired_saving_ns": 19275249,
+            "projected_break_even_requests": 9
+          },
+          "Orchestra": {
+            "admitted": 1,
+            "median_certificate_ns": 41428958,
+            "paired_requests": 4,
+            "total_paired_saving_ns": 18624459,
+            "projected_break_even_requests": 9
+          },
+          "Passport": {
+            "admitted": 1,
+            "median_certificate_ns": 40164667,
+            "paired_requests": 4,
+            "total_paired_saving_ns": 19001542,
+            "projected_break_even_requests": 9
+          },
+          "Shelter": {
+            "admitted": 1,
+            "median_certificate_ns": 40781834,
+            "paired_requests": 4,
+            "total_paired_saving_ns": 20134125,
+            "projected_break_even_requests": 9
+          },
+          "Tournament": {
+            "admitted": 1,
+            "median_certificate_ns": 41752875,
+            "paired_requests": 4,
+            "total_paired_saving_ns": 17068125,
+            "projected_break_even_requests": 10
+          }
+        },
+        "admitted_schemas": 12,
+        "prompts": 48,
+        "same_choices": 48,
+        "correct": {
+          "operator_only": 48,
+          "gated": 48
+        },
+        "median_certificate_ms": 40.523292,
+        "median_warm_ms": {
+          "operator_only": 11.109625,
+          "gated": 6.133291
+        },
+        "median_paired_baseline_over_gated": 1.7881327263263165,
+        "mean_total_application_bytes": {
+          "operator_only": 4468882,
+          "gated": 191122
+        }
+      },
+      "9": {
+        "schemas": {
+          "Airfield": {
+            "admitted": 1,
+            "median_certificate_ns": 70400459,
+            "paired_requests": 4,
+            "total_paired_saving_ns": 120708002,
+            "projected_break_even_requests": 3
+          },
+          "Bakery": {
+            "admitted": 1,
+            "median_certificate_ns": 69704625,
+            "paired_requests": 4,
+            "total_paired_saving_ns": 134138292,
+            "projected_break_even_requests": 3
+          },
+          "Cafe": {
+            "admitted": 1,
+            "median_certificate_ns": 63655334,
+            "paired_requests": 4,
+            "total_paired_saving_ns": 122696835,
+            "projected_break_even_requests": 3
+          },
+          "Campsite": {
+            "admitted": 1,
+            "median_certificate_ns": 71540500,
+            "paired_requests": 4,
+            "total_paired_saving_ns": 135705753,
+            "projected_break_even_requests": 3
+          },
+          "Cinema": {
+            "admitted": 1,
+            "median_certificate_ns": 70070792,
+            "paired_requests": 4,
+            "total_paired_saving_ns": 122641793,
+            "projected_break_even_requests": 3
+          },
+          "Classroom": {
+            "admitted": 1,
+            "median_certificate_ns": 69988666,
+            "paired_requests": 4,
+            "total_paired_saving_ns": 119241960,
+            "projected_break_even_requests": 3
+          },
+          "Exhibit": {
+            "admitted": 1,
+            "median_certificate_ns": 64933458,
+            "paired_requests": 4,
+            "total_paired_saving_ns": 125336958,
+            "projected_break_even_requests": 3
+          },
+          "Museum": {
+            "admitted": 1,
+            "median_certificate_ns": 69623042,
+            "paired_requests": 4,
+            "total_paired_saving_ns": 122055708,
+            "projected_break_even_requests": 3
+          },
+          "Orchestra": {
+            "admitted": 1,
+            "median_certificate_ns": 69855584,
+            "paired_requests": 4,
+            "total_paired_saving_ns": 122253166,
+            "projected_break_even_requests": 3
+          },
+          "Passport": {
+            "admitted": 1,
+            "median_certificate_ns": 68956667,
+            "paired_requests": 4,
+            "total_paired_saving_ns": 119614249,
+            "projected_break_even_requests": 3
+          },
+          "Shelter": {
+            "admitted": 1,
+            "median_certificate_ns": 70607209,
+            "paired_requests": 4,
+            "total_paired_saving_ns": 123228459,
+            "projected_break_even_requests": 3
+          },
+          "Tournament": {
+            "admitted": 1,
+            "median_certificate_ns": 68895208,
+            "paired_requests": 4,
+            "total_paired_saving_ns": 117314083,
+            "projected_break_even_requests": 3
+          }
+        },
+        "admitted_schemas": 12,
+        "prompts": 48,
+        "same_choices": 48,
+        "correct": {
+          "operator_only": 48,
+          "gated": 48
+        },
+        "median_certificate_ms": 69.7801045,
+        "median_warm_ms": {
+          "operator_only": 40.1614795,
+          "gated": 9.577187
+        },
+        "median_paired_baseline_over_gated": 4.15476636571379,
+        "mean_total_application_bytes": {
+          "operator_only": 26010883.333333332,
+          "gated": 386136.6666666667
+        }
+      }
+    }
+  }
+}

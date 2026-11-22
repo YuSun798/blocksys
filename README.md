@@ -127,7 +127,29 @@ The joint archive check verifies matching prompts and QK traffic, differing
 head costs, and native decision agreement separately for each layout. The
 finite-domain replay keeps the original layout whenever one of the four
 authorized bindings changes the native decision. The replay uses archived
-byte counts as costs. Gate execution time remains unmeasured.
+byte counts as costs. See the live benchmark below for measured gate time.
+
+## Reproduce live layout certification
+
+Use both pinned snapshots from the context-length study.
+
+~~~bash
+TOKENIZERS_PARALLELISM=false python3 experiments/run_layout_quality_gate.py \
+  --checkpoint-70m /path/to/70m --checkpoint-160m /path/to/160m \
+  --transport tcp --output ./layout-gate-rerun
+python3 experiments/check_layout_quality_gate.py ./layout-gate-rerun --transport tcp
+~~~
+
+Before sending protected requests, the runner compiles the layouts and
+checks native FP32 decisions for all four authorized bindings. It
+prepares a certificate three times per model, schema and length tier.
+Only a layout that passes the comparison and reduces private QK
+products is selected. The subsequent warm benchmark runs both the
+operator-only and certified route for each binding in randomized
+pair order. Certificate timings exclude model loading. Warm timings
+exclude connection setup and reference checks. Break-even figures
+project reuse from per-schema timings and are defined only for admitted
+schemas with positive measured mean warm savings.
 
 ## Reproduce the matched rewrite × island ablation
 
