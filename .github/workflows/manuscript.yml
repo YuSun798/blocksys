@@ -18,7 +18,6 @@ jobs:
       - name: Verify revised manuscript root
         run: |
           test -s main.tex
-          grep -Fq 'From Task Rewriting to Selective Two-Party LLM Inference' main.tex
           grep -Fq 'Compiling a Task Rewrite into Protected Pythia' main.tex
           grep -Fq 'version 2.25' llncs.cls
       - name: Compile Springer LNCS manuscript

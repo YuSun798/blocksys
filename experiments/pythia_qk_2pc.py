@@ -136,7 +136,21 @@ def workers(transport, one_way_s=0):
 
 
 def evaluate_scores(channels, qk, public_prefix, one_way_s=0):
+    """Evaluate a well-formed score tile with a prefix authorized by the caller.
+
+    The trusted caller establishes which positions may be disclosed.
+    """
+    if not isinstance(qk, np.ndarray) or qk.ndim != 3 or qk.shape[0] != 2 or qk.dtype != np.uint64:
+        raise ValueError("Q/K must be a uint64 array of shape (2, length, width)")
     _, length, width = qk.shape
+    if not 0 < length < (1 << 32) or not 0 < width < (1 << 32):
+        raise ValueError("Q/K length and width must be positive uint32 values")
+    if isinstance(public_prefix, (bool, np.bool_)) or not isinstance(public_prefix, (int, np.integer)):
+        raise ValueError("public prefix must be an integer")
+    public_prefix = int(public_prefix)
+    if not 0 <= public_prefix <= length:
+        raise ValueError("public prefix must be in [0, length]")
+
     rows, _, private_products = causal_cells(length, public_prefix)
     n_scores = len(rows)
     count = int(private_products.sum()) * width

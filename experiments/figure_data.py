@@ -5,6 +5,7 @@ import json
 import statistics
 from pathlib import Path
 
+from check_sst2_layout import check as check_sst2
 from loopback_2pc import WIDTHS
 
 ROOT = Path(__file__).resolve().parent
@@ -133,6 +134,21 @@ def plot_tables():
                 f"{row['median_paired_baseline_over_gated']:.3f}",
                 f"{statistics.median(projections):g}" if projections else r"\textemdash",
             )) + r" \\")
+    sst2 = check_sst2(ROOT / "results", require_full_tcp=True)
+    sample_size = sst2["records"]
+    sst2_rows = []
+    for model in ("70m", "160m"):
+        row = sst2["models"][model]
+        delta = 100 * row["paired_accuracy_difference"]
+        lower, upper = (100 * bound for bound in row["paired_bootstrap_95_interval"])
+        sst2_rows.append(" & ".join((
+            model.upper(),
+            f"{row['original_correct']}/{sample_size}",
+            f"{row['rewritten_correct']}/{sample_size}",
+            str(row["incorrect_to_correct"]),
+            str(row["correct_to_incorrect"]),
+            rf"${delta:+.1f}\,[{lower:.1f},\,{upper:.1f}]$",
+        )) + r" \\")
     return {
         "causal-sweep.dat": "\n".join(causal_rows) + "\n",
         "ablation-sweep.dat": "\n".join(ablation_rows) + "\n",
@@ -141,6 +157,7 @@ def plot_tables():
         "cross-layer-rows.tex": "\n".join(compiled_rows + [r"\bottomrule"]) + "\n",
         "scale-rows.tex": "\n".join(scale_rows + [r"\bottomrule"]) + "\n",
         "gate-rows.tex": "\n".join(gate_rows + [r"\bottomrule"]) + "\n",
+        "sst2-rows.tex": "\n".join(sst2_rows + [r"\bottomrule"]) + "\n",
         "head-rows.tex": "\n".join(head_rows + [r"\bottomrule"]) + "\n",
         "matched-rows.tex": "\n".join(matched_rows + [r"\bottomrule"]) + "\n",
     }

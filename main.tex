@@ -23,37 +23,38 @@
 \newcommand{\Gtnew}{G'_{\mathrm{task}}}
 \newcommand{\srcA}{\textsc{PriGraph}}
 \newcommand{\srcB}{\textsc{ShareRoute}}
-\title{From Task Rewriting to Selective Two-Party LLM Inference}
-\titlerunning{Task Rewriting for Selective Private Inference}
+\title{Task Rewriting for Selective Two-Party Computation in LLM Inference}
+\titlerunning{Task Rewriting for Selective Two-Party Computation}
 \author{Anonymous Authors}
 \authorrunning{Anonymous Authors}
 \institute{Anonymous Institution}
 \begin{document}
 \maketitle
 \begin{abstract}
-Task rewrites change which activations depend on private inputs.
-Our typed interface carries disclosure policy to the operator graph.
-In Pythia-70M and Pythia-160M, lifting an approved note before a private
-field extends the safe prefix and reduces private attention products.
-Across 2,592 matched executions at three prompt lengths, mean peer
-openings stay at 25,600 bytes with the rewrite while total traffic grows.
-Local FP32 has lower median latency on loopback. Protected decisions
-match the FP32 reference for their layout. On 160M, reordering lowers
-field-copy accuracy from 113/144 to 77/144 and raises SST-2 sample
-accuracy from 80/128 to 94/128. The typed-record gate preserves all 288
-paired decisions and rejects two thirds of the 160M rewrite candidates.
-We measure certification cost and project the reuse needed to recover
-it. The prototype protects one attention head and the output projection
-under trusted-dealer, semi-honest two-party computation. The client runs
-the remaining operations. The results separate reductions in secure
-work from model and task sensitivity to input order.
+We study how authorized task rewrites change the work required for
+private LLM inference. Moving a public note before a private field extends
+the causally public prefix. Our prototype selects between two layouts and
+uses trusted-dealer, semi-honest two-party computation for one attention
+head's QK scores and the output projection. The client runs the remaining
+operations. In a matched Pythia-70M and Pythia-160M sweep with 1,440
+protected executions, the joint layout and operator policy holds mean
+QK peer openings at 25,600 bytes across three lengths while total traffic
+grows. Trusted-local FP32 has lower median latency on loopback. Each
+protected decision matches its same-layout FP32 reference. On 160M,
+reordering lowers field-copy accuracy from 113/144 to 77/144 and raises
+accuracy on a balanced SST-2 sample from 80/128 to 94/128. A gate
+enumerates the allowed input values and admits 12 of 36 layout changes on
+160M. Its protected reruns preserve all 288 baseline decisions across
+both models. The experiments quantify communication savings and show
+why model predictions need separate checks after a task rewrite.
 \keywords{Decentralized inference \and Privacy \and Graph compilation \and MPC}
 \end{abstract}
 
 \section{Introduction}
-P2P serving pools heterogeneous compute~\cite{petals,planetserve},
-where peers may retain plaintext prompts and activations. Privacy-aware
-routing and plan caching address placement and reuse~\cite{ppmi,prism,apc}.
+P2P serving pools heterogeneous compute~\cite{petals,planetserve}.
+Peers in plaintext deployments can see prompts or activations they process.
+Privacy-aware routing and plan caching address placement and
+reuse~\cite{ppmi,prism,apc}.
 Cryptographic inference protects values at a communication and latency
 cost~\cite{bolt,puma}.
 
@@ -65,11 +66,14 @@ For example, moving a public note ahead of a private field can increase the
 prefix that has no causal dependency on that field, subject to authorization
 and the task's output contract.
 
-We specify this handoff under a fixed trust model and test causal
-dependence and placement with matched controls. Two protected operators
-compose in a Pythia forward. On typed records, the QK cost selects a
-layout, and a timed quality gate checks its decisions. Two checkpoints
-expose different accuracy effects on the same rewrites.
+We specify this handoff under a fixed trust model and implement one
+authorized rewrite in a Pythia forward with protected QK scores and
+output projection. A matched comparison holds the backend, task,
+token inventory and disclosure permissions fixed while varying layout
+and operator placement. We measure communication and latency against
+operator-only, manual and trusted-local controls. We also test whether
+the decisions of both layouts agree across a finite binding domain
+and measure layout sensitivity on SST-2.
 
 \section{Threat Model and Execution Semantics}
 \paragraph{Participants and disclosure.}
@@ -87,26 +91,35 @@ S0 denotes trusted local execution, S1 semi-honest 2PC, S2 semi-honest
 honest-majority 3PC, and S3 active security. Each stage fixes a backend
 and corruption model before costs can be compared. Our S1 prototype uses
 a trusted client as dealer and assumes at most one statically corrupted
-worker in a fixed pair. The experiment uses unauthenticated TCP loopback
-on one trusted host. ShareRoute uses a separate Semi2k backend for its 2PC
-results. The 3PC design assumes independent trust domains and at most one
+worker in each fixed pair, with no adversary observing both parties' shares.
+The experiment uses unauthenticated TCP loopback on one trusted host.
+ShareRoute reports 2PC results with a separate Semi2k backend. The proposed
+3PC stage would require independent trust domains and at most one
 corrupted party.
 
-\section{Hierarchical Privacy Graph Compiler}
-The reasoning compiler first generates a typed task DAG $\Gt=(V_t,E_t)$. Each node has an operation, input/output schemas, sensitivity, capability requirements, cost profile, and optional executable validator. An admissible typed rewrite produces $\Gtnew\in\mathcal{R}(\Gt)$; the operator compiler then traces the selected LLM invocations into $\Go=(V_o,E_o)$ and links each invocation's inputs to task-graph outputs. The joined plan retains edge provenance from both layers. Figure~\ref{fig:arch} distinguishes compilation stages and runtime paths.
+\section{Hierarchical Privacy Graph Design}
+We propose a compiler in which a typed task DAG $\Gt=(V_t,E_t)$ carries
+schemas, privacy labels, cost profiles and optional validators. An
+admissible rewrite produces $\Gtnew\in\mathcal{R}(\Gt)$. The operator
+compiler would then trace selected LLM calls into $\Go=(V_o,E_o)$ and
+link their inputs to task outputs while retaining provenance
+(Fig.~\ref{fig:arch}). Our prototype instantiates this interface with a
+typed serializer and an instrumented Pythia attention layer
+(Sec.~\ref{sec:compiled}).
 
 \begin{figure}[t]
 \centering
 \input{figures/compiler}
 \Description{A task graph and reusable public artifact feed an operator graph with privacy labels. The planner routes approved plaintext to public peers and protected operators to two-party computation. The trusted client receives and combines the outputs.}
-\caption{Task rewriting exposes reusable public programs before operator
-closure identifies secure subgraphs. Dashed arrows assign work to execution
-domains. Solid arrows indicate compilation flow or results returned to the client.}
+\caption{Proposed compiler and execution paths. Task rewriting can expose
+reusable public programs before operator closure identifies secure subgraphs.
+Dashed arrows assign work to execution domains. Solid arrows show compilation
+flow or results returned to the client.}
 \label{fig:arch}
 \end{figure}
 
 \subsection{Task-Layer Rewriting and Canonicalization}
-We preserve the three \srcA{} rewrite operators and their conditions:
+The design retains three \srcA{} rewrite operators and their conditions:
 \begin{itemize}
 \item \emph{Separate-Template} replaces a separable mixed node with a public program generator and a local private-binding node.
 \item \emph{Lift-Public-Subgraph} replaces a recognized canonical rule with a parameterized public artifact, keyed by rule/version and instantiated locally on private values; the public model returns a \emph{program}, not a user-specific answer.
@@ -114,17 +127,28 @@ We preserve the three \srcA{} rewrite operators and their conditions:
 \end{itemize}
 A rewrite is admitted only with (i) legal information flow, (ii) an executable regression contract for deterministic steps or an empirical quality bound and local fallback for free-form steps, and (iii) typed, versioned interfaces for shareable nodes. PriGraph uses beam search over rewrites and an inner placement/cache planner (MILP on small cases). If no safe rewrite succeeds, it executes the original graph locally.
 
-A reusable artifact contains a parameterized program, typed inputs and
-outputs, assumptions, region, version, content hash, and validator. The
-client authenticates its descriptor and validates assumptions and program
-behavior before use. Untrusted code runs under a local verifier confined
-from egress. The cache stores public artifacts. Private bindings and
-single-use MPC correlations stay outside the cache.
+In the proposed artifact cache, an entry would contain a parameterized
+program, typed inputs and outputs, assumptions, region, version, content
+hash, and validator. Reuse requires descriptor authentication and local
+validation in an environment without egress. Cache entries are public
+artifacts. Private bindings and single-use MPC correlations stay outside
+the cache.
 
 \subsection{Operator-Level Closure and Secure Islands}
-For a model call that consumes protected activations, tracing PyTorch/ONNX operations yields an operator graph with linear projections, QK/AV products, normalization, Softmax, FFN, and optional routing. \srcB{} performs forward private-taint propagation and a backward consistency pass. Every unauthorized path from a private tensor to a non-MPC remote endpoint is rejected. A \emph{secure island} is a connected subgraph executed under MPC. Island boundaries are chosen jointly with conversion, round-trip, and share-lifecycle costs: a collection of smaller islands is not necessarily cheaper than one contiguous region. Shares persist across secure steps; plaintext reconstruction occurs only at the trusted client or an explicitly approved release point.
+In the general design, a model call can be traced into linear projections,
+QK/AV products, normalization, Softmax, FFN and optional routing.
+\srcB{} describes forward private-taint propagation and a backward
+consistency pass to reject unauthorized paths. A \emph{secure island} is
+a connected subgraph executed under MPC. Choosing island boundaries
+requires accounting for conversion, round trips and the lifetime of shares.
+Shares can persist within an island, and plaintext reconstruction requires
+the trusted client or an explicitly approved release point.
 
-The protocol-aware backend distinguishes linear operations on public weights (share-local arithmetic) from expensive nonlinearities requiring online interaction. It may fuse groups of operations, schedule Beaver-triple preprocessing offline, or optimize KV-cache handling. Protocol fusion and trust-aware cohort placement are \emph{design capabilities} of the source study, not separately experimentally validated speedups. In autoregressive generation, private-token attention can depend on public-prefix keys without allowing the compiler to relabel private hidden states as public; privacy closure governs every tensor.
+The proposed backend distinguishes share-local operations on public
+weights from operations requiring online interaction. Its design includes
+protocol fusion, offline preprocessing and KV-cache policies. In a causal
+decoder, a private hidden state can depend on public-prefix keys and still
+requires protection.
 
 \subsection{The Cross-Layer Interface}
 Each edge records its schema, privacy label, origin, authorization, and contract. Each LLM call exposes its approved public prefix, residual private inputs, whether local evaluation is possible, and a cryptographic fallback stage. An operator's taint is calculated \emph{after} the candidate task rewrite. Consequently, $\Gtnew$ changes the amount of secure work; MPC prices can in turn affect which task rewrite is optimal. We define three boundary checks: \emph{(B1)} no public node consumes private plaintext or a secret-derived cache key; \emph{(B2)} every remote private operator lies in a legally composed MPC island, with shares preserved; \emph{(B3)} outputs are reconstructed or disclosed only at policy-approved endpoints. These conditions are necessary; they do not eliminate metadata leakage or guarantee a correct compiler implementation.
@@ -140,8 +164,8 @@ privacy-closure label for a hidden state at position $t$ is
 \end{equation}
 Under dense causality, even approved suffix states can depend on earlier
 secrets. Sparse masks or justified declassification can change closure.
-The compiler computes closure after rewriting because the rewrite changes
-$s_i$. With $k$ uniformly placed private positions in $L$ tokens, the
+Closure is computed after rewriting because the rewrite changes $s_i$.
+With $k$ uniformly placed private positions in $L$ tokens, the
 $k+1$ public gaps are exchangeable and sum to $L-k$. The expected prefix
 is $(L-k)/(k+1)$, giving $F_{\rm safe}=15\%$ at $L=16,k=4$.
 
@@ -192,23 +216,29 @@ shares must be refreshed or transferred by a protocol satisfying that same
 model. The implemented two-operator pipeline reconstructs on the trusted
 client and shares afresh at the next boundary.
 
-The guarantee excludes task-pattern and timing leakage, network anonymity, unproven party independence, side channels, malicious deviations under semi-honest protocols, failure-time privacy, and quality preservation of unrestricted free-form reasoning. If the cryptographic assumptions cannot be met, the scheduler must reject that remote plan rather than silently fall back to plaintext.
+For the evaluated QK kernel, worker views are defined conditional on the
+approved prefix, dimensions and public selectors. Each worker receives its
+own input and correlation shares. Fresh masks randomize the opened
+differences under the trusted-dealer assumption. The trusted caller
+authorizes the disclosed activations. The kernel can check prefix bounds
+before sending but depends on that authorization for any in-range prefix.
+Metadata, side channels and active deviations remain outside this
+argument. Deployment requires rejecting remote plans whose trust
+assumptions cannot be met.
 
 \section{Scope of the Source Prototypes}
 \label{sec:eval}
-\srcA{}~\cite{prigraph-source} studied public program generation and
-private binding on synthetic reasoning tasks. On 400 explicit-formula
-tasks, the rewritten 14B system and a tool-augmented local 7B baseline
-both reached 100\% accuracy. With the formula withheld, the rewrite arm
-fell back to local execution on all 104 tasks and solved none. These
-regimes delimit where task decomposition is actionable.
-\srcB{}~\cite{shareroute-source} studied operator placement with
-MP-SPDZ on a two-layer mini-GPT of width 32, using GPT-2 125M for
-plaintext graph analysis. Its workload sweep varies the public fraction.
-The experiments below keep a fixed 2PC backend and compare how task
-and operator choices change its work on matched requests.
+The \srcA{} draft~\cite{prigraph-source} reports that its rewritten 14B
+system and a tool-augmented local 7B baseline both reached 100\% on
+400 explicit-formula tasks. With the formula withheld, it reports no
+admissible rewrite, 104/104 local fallbacks and 0/104 correct in the
+rewrite arm. The \srcB{} draft~\cite{shareroute-source} reports operator
+placement tests with MP-SPDZ on a two-layer mini-GPT of width 32 and
+plaintext graph analysis on GPT-2 125M. Its workload sweep varies the
+public fraction. Our experiments hold the 2PC backend fixed and vary
+layout and operator policy on matched requests.
 
-\section{CPU Diagnostic: Where Secrets Contaminate Causal Attention}\label{sec:cpu}
+\section{Diagnosing Causal Dependence}\label{sec:cpu}
 \paragraph{Question and implementation.}
 We perturb only secret-position vectors in a random frozen two-layer
 causal Transformer ($d=32$, four heads, FFN width 64, length 16). We test
@@ -253,62 +283,6 @@ predictions, with maximum distribution TV $0.00110$ versus full prefill.
 These are plaintext tests on one checkpoint and synthetic text. The
 position counts are descriptive within prompts.
 
-\section{Matched Rewrite and Island Ablation}
-\label{sec:matched}
-We test the handoff on $f(p,x)=\sum_{i=1}^{m}(p_i+x)^2$ in
-$\mathbb{Z}_{2^{64}}$, with private $x$. The original client sends shares of
-each $p_i+x$. When the template operands $p_i$ are public, the task rewrite
-expands $f$ to $\sum_i p_i^2+2x\sum_i p_i+mx^2$. The benchmark planner assigns dependency
-labels to the square operands of this rewrite. Selective execution keeps the public squares
-on the client and sends the residual square to MPC. The client performs the
-private linear correction and output reconstruction. A hand-written algebraic
-baseline independently computes the public first and second moments and sends
-one square. Where all $p_i$ are private, the tested policies keep the
-original circuit. The experiment fixes the offload policy for private squares.
-Without this constraint the trusted client can evaluate the arithmetic locally.
-
-\paragraph{Protocol and accounting.}
-Two independent worker processes exchange additive-share openings over
-localhost TCP. The trusted client acts as preprocessing dealer and supplies
-fresh OS-random square correlations $([a],[a^2])$. For each square the
-parties open $d=x-a$ in one batched exchange and derive shares of
-$a^2+2da+d^2$~\cite{beaver}. Each party receives its own input and
-preprocessing shares. The client reconstructs the weighted sum from two
-output shares. The semi-honest measurement assumes a trusted dealer and
-non-colluding workers. The processes share one host. Connect setup,
-WAN delays, authentication and network headers are outside the benchmark.
-
-\paragraph{Paired design and results.}
-We evaluate five configurations in randomized order for each template regime
-and width $m\in\{4,16,64,128\}$. There are 100 inputs and 10 warmups per cell
-and 4,000 measured executions on an Apple M4 Mac with 16 GB RAM (Python 3.9.6). Each result equals the cleartext
-reference. With public templates at width 64, the joint and algebra schedules
-both reduce the opening payload to 16 bytes from 1,024 for the original square schedule
-(Table~\ref{tab:matched}). All configurations use one batched exchange.
-For private templates, they each use $m$ squares. The cold time includes
-planning and preprocessing on pre-established connections. The online time
-includes share encoding, exchange and reconstruction. The byte counts sum traffic in both directions for each channel group. Client bytes include operand shares, public weights and result shares. Dealer bytes include square-correlation shares, count headers and ACKs. Timings include two extra instrumentation words that the client-byte column excludes.
-
-\begin{table}[t]
-\centering
-\caption{TCP loopback at width 64 for public templates. Counts are per
-request. Time is the median over the same 100 inputs per configuration.}
-\label{tab:matched}
-\small\renewcommand{\arraystretch}{1.16}\setlength{\tabcolsep}{5pt}
-\begin{tabular}{@{}lrrrrrr@{}}
-\toprule
-& & \multicolumn{3}{c}{Bytes} & \multicolumn{2}{c}{Time ($\mu$s)}\\
-\cmidrule(lr){3-5}\cmidrule(l){6-7}
-Configuration & Squares & Peer & Client & Dealer & Online & Cold \\
-\midrule
-\input{figures/matched-rows}
-\end{tabular}
-\end{table}
-
-The joint and hand-written schedules implement the same arithmetic. This
-comparison isolates the effect of exposing a legal public subgraph before
-placement. The archive gives measurements across all four widths.
-
 \section{Protected Operators in Pretrained Pythia}
 \label{sec:protected-pythia}
 \paragraph{Task contract.}
@@ -336,7 +310,7 @@ For Pythia's second layer, head zero, we take post-RoPE $Q,K$ on the
 client. Policy admits only positions before the earliest private token
 as public. Public--public dot products are clear, mixed dot products
 are linear on shares, and private--private products use fresh
-dealer-assisted Beaver correlations. For length $L$, prefix $p$ and
+dealer-assisted Beaver correlations~\cite{beaver}. For length $L$, prefix $p$ and
 head width $d=64$, the causal triangle uses $dL(L+1)/2$ protected
 scalar products with all operands shared and $d(L-p)(L-p+1)/2$
 under selective execution. In isolated tests, 40,976 scores and 480
@@ -344,12 +318,14 @@ candidate projections match the exact ring references. Maximum QK
 error against floating scores is $9.73\times10^{-5}$.
 
 \paragraph{Composed forward and controls.}
-We run five policies in randomized order. Reconstructed scores feed
-native masking and softmax, then the client shares the final hidden
-state for projection. We cross QK prefix disclosure with head-row
-restriction and add a private-selector control. All runs prefill
-completely over established sockets. Timings include preprocessing,
-execution and reconstruction and exclude reference checks.
+We run five policies in randomized order on an Apple M4 with 16 GB RAM.
+The client applies masking, softmax and AV to reconstructed QK scores
+and later shares the final hidden state for projection. We cross QK
+prefix disclosure with projection-row restriction and add a private-selector
+control. All runs prefill completely over established sockets. Timings
+include preprocessing, execution and reconstruction and exclude reference
+checks. Payload sums cover both directions and exclude network headers and
+two 8-byte QK telemetry counters.
 
 All 480 runs match the fixed-point references and all 96 FP32 decisions.
 Every policy recovers 88 gold fields. Maximum absolute candidate logit
@@ -363,9 +339,10 @@ projection outperforms both TCP projections in isolation.
 
 \begin{table}[t]
 \centering
-\caption{Composed Pythia-70M forward with one protected attention head and
-a protected output head. Each policy evaluates the same 96 prompts.
-Values are medians per prompt on TCP loopback.}
+\caption{Composed Pythia-70M forward with protected QK scores for one
+attention head and protected output projection. All-shared QK shares
+all QK inputs for that head. Values are medians on the same 96 prompts
+per policy on TCP loopback.}
 \label{tab:composed}
 \small\renewcommand{\arraystretch}{1.12}\setlength{\tabcolsep}{5pt}
 \begin{tabular}{@{}lrrrr@{}}
@@ -375,13 +352,6 @@ Policy & QK peer (B) & Dealer (B) & Head (B) & Elapsed (ms)\\
 \input{figures/composed-rows}
 \end{tabular}
 \end{table}
-
-\paragraph{Controlled propagation delay.}
-Across 576 loopback runs we inject half-RTT sender waits, once per client
-fan-out. Scores and bytes for each prompt and policy are invariant. At
-nominal RTTs 0, 5 and 20 ms, paired full-to-joint time ratios are 2.97,
-1.40 and 1.18. At 20 ms the paired increments are 132.32 and 119.67 ms,
-above the four-RTT 80 ms model, with timer and scheduling overhead.
 
 \section{Compiling a Task Rewrite into Protected Pythia}
 \label{sec:compiled}
@@ -508,37 +478,37 @@ predictions to wrong and four wrong predictions to correct. Accuracy
 falls from 113/144 to 77/144. The three tiers reuse semantic records, so
 these counts describe the paired samples without assuming independence.
 
-\paragraph{Live layout certification.}
-Before dispatch, the gate compiles both layouts and runs eight native
-FP32 forwards covering the four public bindings. It caches a rewrite
-decision for the fixed checkpoint, schema and tier. The rewrite must
-agree with the original choice for every binding and reduce private QK
-work. A failed certificate retains the original layout with selective
-QK. Three repetitions per case give 216 certificate timings. We then
-execute fresh TCP forwards for the two routes on each binding in
-randomized pair order (576 runs). Warm times include tensor preparation
-and protected execution. Loading, socket setup and ring checks sit
-outside the timers.
+\paragraph{Finite-domain layout agreement.}
+The gate compiles both layouts and runs eight native FP32 forwards
+over four values in the public candidate domain. The selected binding
+remains private. The gate stores a decision for the fixed checkpoint,
+schema and length tier. It admits the rewrite if both layouts agree
+on all four choices and the rewrite reduces private QK products.
+Otherwise it retains the original layout with selective QK. We time
+216 such checks and run 576 protected forwards on the same bindings in
+randomized pair order. We verify the fixed-point route independently
+against its FP32 choice. Warm times include tensor preparation and
+protected execution and exclude loading, socket setup and ring checks.
 
-All 288 pairs preserve the original answer, including baseline errors.
-On 160M, median paired byte savings are zero across tiers and summed
-traffic falls by 30\%, 40\% and 16\%. We project the number of requests to
-recover setup as the ceiling of the median per-schema certificate time
-divided by its mean paired warm time saving. The projection applies to
-admitted schemas with positive measured savings and assumes stable
-reuse. The longest tier gives medians of 3 requests on 70M and 9 on 160M
-(Table~\ref{tab:gate}). The 160M median warm ratio there remains near
-one because only two schemas pass. Two of five admitted 160M schemas
-at the shortest tier have no positive measured savings. Open-ended
-binding domains are outside this certificate's scope.
+All 288 protected pairs agree with the original choices, including
+baseline errors. We rerun the protected operators to measure their
+cost. The finite domain also permits a trusted local lookup of the
+cached choices. On 160M the gate admits 12 of 36 schema--tier combinations.
+Median paired byte savings are zero at each tier, while aggregate
+traffic falls by 30\%, 40\% and 16\%. At the longest tier only two
+schemas pass and the median warm time ratio is 1.002
+(Table~\ref{tab:gate}). Two of five admitted 160M schemas at the shortest
+tier show no positive mean warm savings. These checks cover the same
+enumerated domain used for admission.
 
 \begin{table}[!ht]
 \centering
-\caption{Timed layout certification on TCP loopback. Positive counts
+\caption{Finite-domain layout gate on TCP loopback. Positive counts
 admitted schemas with positive mean warm savings. Setup is the median
-of per-schema median certificate times. The warm ratio is the median
-paired operator-only to gated time over all 48 requests. Break-even is
-the projected median request count over positive schemas.}
+of per-schema median checks. The warm ratio compares paired
+operator-only and gated time over all 48 requests. Break-even is the
+projected median request count over positive schemas only, relative to
+operator-only execution, using each schema's setup and warm savings.}
 \label{tab:gate}
 \small\renewcommand{\arraystretch}{1.08}\setlength{\tabcolsep}{4pt}
 \begin{tabular}{@{}llrrrrr@{}}
@@ -549,49 +519,75 @@ Model & Tokens & Admitted & Positive & Setup (ms) & Warm ratio & Break-even\\
 \end{tabular}
 \end{table}
 
-\paragraph{External text.}
+\paragraph{SST-2 layout sensitivity.}
 We sample 64 negative and 64 positive examples from the official GLUE
 SST-2 development split~\cite{sst,glue}. Each review is treated as the
 private span. Both prompts use the same two single-token labels and
 end with a sentiment query. Moving a fixed public instruction ahead
 of the review expands the approved prefix from 18 to 33 tokens.
 Lengths (42--89 tokens), token multisets and private spans match
-exactly. A fixed label scores 64/128. Native correct counts change
-from 65 to 68 for 70M and from 80 to 94 for 160M, out of 128. On
-160M, 20 reviews change from wrong to correct and six regress.
-All 512 TCP executions agree with the corresponding native choices.
-Mean QK peer openings fall from 1.990 to 0.908 MB in both models.
-The 160M accuracy change reverses the direction on synthetic field
-copying. This check concerns one fixed prompt pair and unrestricted
-review text outside the enumerated certificate domain.
+exactly. All 512 protected forwards agree with the corresponding native
+choices. Mean QK peer openings fall from 1.990 to 0.908 MB in both models.
+On 160M the accuracy change reverses the direction observed on field
+copying. On 70M both accuracies are near the 64/128 constant-label
+baseline, and correct positive predictions fall from 10 to 5
+(Table~\ref{tab:sst2}). We use one fixed zero-shot prompt pair and report
+a descriptive comparison on the development sample. We did not check
+for overlap with model training data. Reviews are outside the gate's
+enumerated domain.
+
+\begin{table}[!ht]
+\centering
+\caption{Paired SST-2 choices for each checkpoint on the same 128
+examples. Change is in percentage points with descriptive 95\%
+paired-bootstrap intervals over examples.}
+\label{tab:sst2}
+\small\renewcommand{\arraystretch}{1.12}\setlength{\tabcolsep}{5pt}
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+Model & Original & Rewrite & Wrong$\to$right & Right$\to$wrong & Change (pp)\\
+\midrule
+\input{figures/sst2-rows}
+\end{tabular}
+\end{table}
 
 \section{Related Work}
-PPMI, PRISM, MINIM, Agentic-PPML and Split-and-Denoise separate
-public assistance from private state through distinct policies and threat
-models~\cite{ppmi,prism,minim,agenticppml,splitdenoise}. Collaborative
-numerical reasoning reuses remote code for local answers. APC caches task
-plans, while RelayCaching reuses decoding KV state~\cite{apc,collab,relaycache}.
+PPMI combines task decomposition and encrypted retrieval. PRISM routes
+requests across cloud and edge, and MINIM filters UI observations locally.
+Agentic-PPML proposes intent-based routing to private domains.
+Split-and-Denoise sends locally perturbed
+embeddings~\cite{ppmi,prism,minim,agenticppml,splitdenoise}. Collaborative
+numerical reasoning uses remote code to compute local answers. APC caches task
+plans, and RelayCaching reuses decoding KV state~\cite{apc,collab,relaycache}.
 LLMCompiler, equality saturation, HEFT and information-flow control inform
 the graph representation and scheduling~\cite{compiler,egg,heft,sabelfeld,cocoon}.
+
+Song et al.~\cite{promptseparation} separate public and private prompt
+tokens using KV precomputation and an adjusted attention mask. We
+change the serialization of an authorized task and keep the model's
+causal mask for each resulting prompt. This lets us measure how layout
+changes both the communication of a selected QK operator and model
+predictions under otherwise matched conditions.
 
 Marill reduces MPC work by adapting the model during fine-tuning~\cite{marill}.
 Our design targets changes in the dependency graph of a fixed model
 after a task rewrite. SecretFlow-SPU and MP-SPDZ provide MPC backends.
 PUMA, BOLT, SOAL, FuseFSS, BLB and MPCache study protocol or cache
 costs for secure inference~\cite{bolt,puma,secretflow,mpspdz,soal,fusefss,blb,mpcache}.
-Petals and PlanetServe study distributed inference. SWARM studies
-training across heterogeneous workers~\cite{petals,planetserve,swarm}.
+Petals and PlanetServe study distributed inference, with optional TEE
+content protection in PlanetServe. SWARM studies training across
+heterogeneous workers~\cite{petals,planetserve,swarm}.
 
 \section{Limitations, Ethics, and Conclusion}
 Experiments cover two checkpoints in one family, synthetic records,
-an SST-2 sample and one loopback host. The client runs the remaining
-prefill operations and final choice. Workers see public selectors and request
-dimensions. Each run uses fresh masks and correlations under semi-honest
-non-collusion and a trusted dealer. Full generation, WAN and active
-security require separate evaluation. Record equivalence supports
-privacy analysis. Deployment also requires task-specific model quality
-validation. The implemented planner costs one operator and one rewrite.
-The general objective includes cache reuse, placement and protocol choice.
+an SST-2 sample and sequential runs on one loopback host. Workers see
+public selectors and request dimensions. Full-model offload, generation,
+WAN performance and active security require separate evaluation. Cache
+reuse, cohort selection and protocol choice are parts of the proposed
+design. The measured prototype shows how authorized serialization can
+reduce protected QK work. Its paired results show that task equivalence
+and same-layout numerical agreement leave a separate question about
+model behavior after rewriting.
 
 \paragraph{Code and data availability.}
 Scripts, checkpoint identifiers, per-request archives and verification
@@ -607,7 +603,7 @@ Measurements come from executable evaluations and archived records.
 \subsubsection{\discintname} The authors declare no competing interests relevant to this work.
 \end{credits}
 
-\begin{thebibliography}{32}
+\begin{thebibliography}{33}
 \bibitem{petals} Borzunov, A., et al.: Petals: Collaborative inference and fine-tuning of large models. ACL System Demonstrations (2023)
 \bibitem{planetserve} Fang, F., et al.: PlanetServe: A decentralized, scalable, and privacy-preserving overlay for democratizing large language model serving. NSDI (2026)
 \bibitem{ppmi} Bae, Y., et al.: PPMI: Privacy-preserving LLM interaction with Socratic chain-of-thought reasoning and homomorphically encrypted vector databases. arXiv:2506.17336 (2025)
@@ -632,6 +628,7 @@ Measurements come from executable evaluations and archived records.
 \bibitem{heft} Topcuoglu, H., Hariri, S., Wu, M.Y.: Performance-effective and low-complexity task scheduling for heterogeneous computing. IEEE TPDS 13(3), 260--274 (2002)
 \bibitem{sabelfeld} Sabelfeld, A., Myers, A.C.: Language-based information-flow security. IEEE JSAC 21(1), 5--19 (2003)
 \bibitem{cocoon} Lamba, A., et al.: Cocoon: Static information flow control in Rust. PACMPL 8(OOPSLA1), Article 100 (2024)
+\bibitem{promptseparation} Song, J., Park, J., Yang, E.: Secure autoregressive inference with prompt separation via key-value caching. \href{https://openreview.net/forum?id=tFNsosNMHT}{OpenReview manuscript} (2025, revised 2026)
 \bibitem{marill} Rathee, D., Li, D., Stoica, I., Zhang, H., Popa, R.: MPC-minimized secure LLM inference. arXiv:2408.03561 (2024)
 \bibitem{secretflow} Ma, J., et al.: SecretFlow-SPU: A performant and user-friendly framework for privacy-preserving machine learning. USENIX ATC, 17--33 (2023)
 \bibitem{mpspdz} Keller, M.: MP-SPDZ: A versatile framework for multi-party computation. ACM CCS (2020)

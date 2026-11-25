@@ -1,14 +1,15 @@
 # Cross-Layer Privacy Compilation — BlockSys 2027
 
-**Paper:** *From Task Rewriting to Selective Two-Party LLM Inference*
+**Paper:** *Task Rewriting for Selective Two-Party Computation in LLM Inference*
 **Main file:** [`main.tex`](main.tex), official BlockSys 2027 `llncs.cls` v2.25, with figures in `figures/`.
-**Status:** research manuscript with causal diagnostics, a trusted-dealer
-arithmetic ablation, two protected Pythia operators and an executable typed
-rewrite that selects their operating policy for synthetic records.
+**Status:** research manuscript with causal diagnostics, an executable
+two-layout rewrite, and trusted-dealer protection for one Pythia attention
+head's QK scores and the output projection. Matched synthetic records and an
+SST-2 development sample quantify both communication and decision changes.
 
 ## Contents
 
-- `main.tex`: submission manuscript. It juxtaposes the results from PriGraph and ShareRoute, with method/assumption boundaries and a new CPU causal-privacy test.
+- `main.tex`: submission manuscript. It links PriGraph's task rewrites to ShareRoute's operator-level placement and reports matched Pythia experiments.
 - `experiments/local_lm_quality.py`: pretrained Pythia-70M end-position dependence and public-KV reuse diagnostic, with results in `experiments/results/pythia_probe.json`.
 - `experiments/causal_privacy_cpu.py`: pure-CPU reproducible PyTorch diagnostic and deterministic arithmetic contract tests.
 - `experiments/results/summary.json`: summary of observed tests and hardware.
@@ -16,7 +17,7 @@ rewrite that selects their operating policy for synthetic records.
 - `experiments/results/case_results.csv`: 720 per-case position-dependency measurements.
 - `experiments/loopback_2pc.py`: paired rewrite × island experiment and algebraic baseline with two worker processes over TCP loopback. Per-case and grouped results are under `experiments/results/loopback_*.csv`.
 - `experiments/rewrite_island_cpu.py`: earlier deterministic in-process ring emulator, retained for regression checking.
-- `EVIDENCE_AND_REVIEW_AUDIT.md`: source-derived results, confounders, and experiments still needed before claiming top-conference-level systems evidence.
+- `EVIDENCE_AND_REVIEW_AUDIT.md`: source provenance, experimental checks and claim revisions.
 
 The original PriGraph and ShareRoute PDFs are source manuscripts supplied by the authors and are not included in this repository.
 

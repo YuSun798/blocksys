@@ -1,8 +1,29 @@
-# Reviewer-facing audit — PriGraph × ShareRoute, revision 2026-11-18
+# Evidence audit for PriGraph and ShareRoute
 
-## Paper thesis
+## Submission revision
 
-Do not confuse *task-level elimination of avoidable secret dependence* with *cryptographic protection of residual private operator computation*. The proposed novel link is typed task-to-operator handoff and a security-stage-constrained global planning objective. It remains a framework design, **not a fully tested integration**.
+The manuscript now distinguishes the proposed compiler from the implemented
+two-layout serializer and instrumented Pythia operators. The tested
+two-party path computes QK scores for one attention head and projects the
+last hidden vector. The client performs the remaining prefill operations.
+The QK kernel validates malformed shapes and prefix bounds before sending.
+In-range disclosure relies on a trusted caller.
+
+The main paper retains matched traffic, local latency controls, the 160M
+accuracy regression on field copying, and the opposite change on the
+SST-2 sample. The paired SST-2 table is generated from the checked TCP
+archive. The gate is reported as a repeated check of its enumerated input
+domain, with conditional break-even in the table. The synthetic arithmetic
+ablation and sender-delay sweep remain in the repository archive. The
+closest prompt-separation manuscript is cited as a public OpenReview
+manuscript. [OpenReview record](https://openreview.net/forum?id=tFNsosNMHT)
+
+After adding the QK input checks, both model checkpoints were rerun on
+the full 128-example SST-2 sample over TCP. The post-change run matched
+the prior archive on all 512 prompt fingerprints, native and protected
+choices, ring checks and protocol counts. The independent verifier
+re-tokenized 256 prompt layouts from the original development split.
+The paper continues to use the prior archive for recorded timings.
 
 ## Source-result provenance matrix
 
@@ -11,14 +32,15 @@ Do not confuse *task-level elimination of avoidable secret dependence* with *cry
 | Accuracy | 360 synthetic tasks; original 7B local 54.2%, privacy-violating 14B remote 69.2%, rewritten 14B public + private local binding 100%; reported 95% CIs for baselines | 9,800 operator comparisons, 120/120 argmax on d=32; no full-size downstream task accuracy | Different notions of correctness; cannot compare percentages |
 | Key confounder | Tool-augmented local 7B also achieves 100% on 400 explicit-formula financial tasks; 38% on 200 implicit-formula tasks (no matched rewritten 14B arm) | Different trust stages: semi-honest 2PC vs honest-majority 3PC; 95x result switches stages | Avoid attribution of deterministic-evaluation accuracy to graph rewriting and 95x to island selection alone |
 | Reuse/scheduling | 6 vs 2 generations at 3 variants; 12 vs 2 at 12; joint 0.1551 vs sequential 0.1929 or 0.4110, *calibrated simulation* | Island/protocol/cohort joint plan described but cohort placement/fusion not independently benchmarked | No cross-system real traffic result |
-| Cryptographic execution | No MPC within task prototype | Real MP-SPDZ on d=32 mini-GPT; full 2PC 73.2 s / 6313 MB vs selectable 2PC 19.0 s / 1629 MB; selectable 3PC 0.77 s / 144 MB | 3.9x **within 2PC** at 75% public; 95x changes trust assumption |
+| Cryptographic execution | No MPC within task prototype | MP-SPDZ on d=32 mini-GPT; full 2PC 73.2 s / 6313 MB vs selectable 2PC 19.0 s / 1629 MB; selectable 3PC 0.77 s / 144 MB | The 2PC contrast changes public exposure; the 95x comparison also changes the trust assumption |
 | Boundary | Private formula: 104/104 fallback; reported 0% rewritten path | 100% private: island selection reverts to Full-MPC | Both boundaries required in any new combined experiment |
 | Large-scale evidence | 7B/14B Qwen task-level workloads; heterogeneous 4090/V100 preliminary tests | GPT-2 125M taint-only / plaintext; d=768 MPC estimate analytical, compiler times out at d=128 | No production-scale encrypted model inference |
 | Adversarial support | Guarded/unguarded secret egress, prompt injection, cache poisoning, AST execution battery | Information-flow argument and conditional composition; anti-collusion not empirically validated | Not a general malicious-peer proof |
 
-Original source PDFs supplied by the user: `PriGraph_v5_final_2026-10-18(1).pdf` and `ShareRoute_BlockSys2027_final(2).pdf`; the downloadable delivery ZIP retains these unchanged. Values above are reported source results, not results of this revision.
+The table records values reported in the two original source PDFs supplied by
+the authors. File digests appear below.
 
-## New experiment: CPU-only causal dependency
+## Initial CPU diagnostic of causal dependence
 
 Source: `experiments/causal_privacy_cpu.py`; raw data and summary under `experiments/results/`.
 
@@ -30,15 +52,15 @@ Source: `experiments/causal_privacy_cpu.py`; raw data and summary under `experim
 
 **Scope exclusion:** no MP-SPDZ executed in the new run, no cryptographic secrecy measurement, no WAN/peer scheduling, no learned model benchmark and no GPU hardware in this environment. These unit-level results support a dependency/architecture point only, not a novel performance headline.
 
-## Top-tier reviewer objections and remedies
+## Early review before the Pythia experiments
 
-1. **No integrated implementation:** implement a genuine task rewrite to operator trace, and a working 2PC backend for the non-decomposable residual graph. Time and bytes must come from one end-to-end run, with no hypothetical cross-layer gain.
+1. **Integration:** the first draft had no timed task-to-operator path. The later Pythia runs integrate one typed rewrite and two operators. General-purpose tracing and full-model MPC remain design considerations.
 2. **No matched counterfactual on implicit reasoning:** compare 7B/14B with *identical* tools, policy, and budgets; measure non-deterministic task quality and unsafe egress explicitly.
 3. **Cryptographic assumptions differ:** repeat complete factorial analysis independently at S1 (semi-honest 2PC) and S2 (honest-majority 3PC), without mixing denominators.
 4. **Data and model scale:** prefill vs decode, longer contexts, 7B+ protected activations, realistic regions/WAN and heterogeneous peers; separate numerical error from task accuracy.
 5. **Cost-model confounding:** source simulated reuse and planner proxy should not be reported as live financial savings; measure planner CPU latency, cache misses, networking, cost gaps and session-unique offline triples.
 6. **New CPU test overclaims:** it is random two-layer attention, not proof of soundness. Extend to pretrained decoders and dynamic execution traces, examine public-cache lookups and rejection of illegal declassification.
-7. **Bibliography:** corrected the original PPMI entry against arXiv:2506.17336 (Bae et al.; the supplied PDF had an incorrect title/placeholder author), and checked MINIM against the ICML 2026 PMLR entry. Other titles and venue metadata inherited from both PDFs still merit full primary-source verification before submission.
+7. **Bibliography:** corrected the original PPMI entry against arXiv:2506.17336 and checked MINIM against the ICML 2026 PMLR entry. The subsequent peer review traced the 30 public references in the merged draft to primary records and identified the additional prompt-separation manuscript.
 8. **Single-blind submission:** author info must be authentic; the draft intentionally inherits anonymous author placeholders.
 
 ## Exact proposed minimum factorial for a genuine future paper
@@ -90,7 +112,7 @@ The latest manuscript distinguishes directly reproduced diagnostics, source-repo
 | Closest related work includes remote pattern extraction with local answer reconstruction and adaptive plan-template reuse. | Scope PriGraph's distinction to typed interfaces, explicit public subgraph keys and the proposed handoff to operator closure. See [AAAI proceedings PDF](https://ojs.aaai.org/index.php/AAAI/article/download/40779/44740) and [APC proceedings](https://proceedings.neurips.cc/paper_files/paper/2025/hash/9549f7d06700f0966d5f938f1d11022a-Abstract-Conference.html). |
 | Table 4 in the ShareRoute source compares 0%, 50% and 75% public input across the three configurations. Its 3.9x value mixes workload exposure and configuration. Its 95x wall-clock and 44x per-party communication additionally switch the trust model. The ratio of summed party communication for the 2PC and 3PC endpoints would be approximately 29.2x under consistent per-party counting. | Remove the protocol table, orthogonality language and the isolated island speedup claim. Keep the source 2PC sweep labeled as workload sensitivity. |
 | ShareRoute source reports 8,760 comparisons with factors 40 pairs × 79 tensors × 64 positions. The product is 202,240. The unit or filters require the underlying logs. Source wording also mixes single-run measurement with five-seed mean and SD. | The aggregate count is excluded. Keep only the original table values with their stated protocol and summary statistics, qualified as source-reported. |
-| PriGraph's accuracy arms change model size and execution path together. The separately reported local-tool control attains the same explicit-formula accuracy. A 100% fallback rate measures route eligibility, whereas fallback accuracy measures task utility. | Retain qualified synthetic source evidence and remove the inference that rewriting caused the accuracy difference. Keep only the fallback rate for the private-formula arm. |
+| PriGraph's accuracy arms change model size and execution path together. The local-tool control attains the same explicit-formula accuracy. | Attribute the matched explicit-formula results to the source. Report private-formula fallback (104/104) and rewrite-arm accuracy (0/104) separately. |
 | The 1,200-case local guard script uses an explicitly assigned eligibility flag, constructs fixed public fields, tests absence of keys it never inserts, and increments the egress counter by zero. | Exclude those counts from the paper's evidence. Archived tests may remain available as examples. |
 | The causal chart is generated from oracle dependency labels. Output perturbations are checked separately at the specified tolerance. Fixed prefix and suffix masks and 100%/0% endpoints make some comparisons deterministic. | Label the plotted quantity as closure-derived and avoid using agreement as a validation of cryptographic security or of the actual ShareRoute implementation. |
 | The arithmetic emulator directly constructs its four schedules. It uses a seeded random generator and counts logical messages, while the local process sees both parties' shares. A direct algebraic baseline attains one protected square under the same forced offload policy, and all-local arithmetic can use zero MPC. | Keep as a scope-limited mechanism example. Disclose the algebraic baseline in the abstract, methods and figure caption. Exclude claims of an optimizing compiler, measured network bytes, round speedup or a production MPC security result. |
@@ -417,8 +439,8 @@ It does not redistribute the source text.
 Two fixed zero-shot layouts move a public note while leaving the final
 sentiment query and label set unchanged. On every pair, lengths of
 42–89 tokens, token inventories and private tokens match. The
-approved prefix grows from 18 to 33 tokens. One attention head and
-a two-row head projection use the same dealer-assisted 2PC backend as
+approved prefix grows from 18 to 33 tokens. One attention head's QK scores
+and a two-row output projection use the same dealer-assisted 2PC backend as
 the other Pythia trials. The result records 512 TCP executions in total
 over the two checkpoints and layouts, with exact ring checks and
 agreement with each layout's native FP32 prediction throughout.
