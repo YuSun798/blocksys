@@ -40,7 +40,7 @@ openings stay at 25,600 bytes with the rewrite while total traffic grows.
 Local FP32 has lower median latency on loopback. Protected decisions
 match the FP32 reference for their layout. On 160M, reordering lowers
 field-copy accuracy from 113/144 to 77/144 and raises SST-2 sample
-accuracy from 80/128 to 94/128. An exhaustive gate preserves all 288
+accuracy from 80/128 to 94/128. The typed-record gate preserves all 288
 paired decisions and rejects two thirds of the 160M rewrite candidates.
 We measure certification cost and project the reuse needed to recover
 it. The prototype protects one attention head and the output projection
