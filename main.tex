@@ -31,26 +31,22 @@
 \begin{document}
 \maketitle
 \begin{abstract}
-Task-level rewrites can change which activations depend on private inputs.
-We specify a typed interface that carries disclosure policy from task
-rewrites to the operator graph. We implement a restricted instance for
-structured records in Pythia-70M and Pythia-160M. The compiler moves a public note before
-a private field when the task schema permits reordering, derives the
-safe prefix from tokenization, and selects the layout with the fewest
-private attention products. Across 2,592 matched executions at three
-prompt lengths, the rewrite holds mean two-party attention openings at
-25,600 bytes for both checkpoints while total application traffic grows
-with sequence length. Local FP32 has lower median latency on loopback.
-Protected decisions match their own layout's FP32 predictions, but
-Pythia-160M field accuracy falls from 113/144 to 77/144 after reordering.
-A live gate certifies the four allowed inputs before rewriting. It
-preserves all 288 paired decisions and rejects two thirds of the 160M
-rewrite candidates. We measure setup costs and project the reuse needed
-to recover them. The experiments protect one attention
-head and the output projection under trusted-dealer, semi-honest
-two-party computation. The trusted client runs the remaining operations.
-The results separate reductions in secure work from model-specific
-quality effects of changing input order.
+Task rewrites change which activations depend on private inputs.
+Our typed interface carries disclosure policy to the operator graph.
+In Pythia-70M and Pythia-160M, lifting an approved note before a private
+field extends the safe prefix and reduces private attention products.
+Across 2,592 matched executions at three prompt lengths, mean peer
+openings stay at 25,600 bytes with the rewrite while total traffic grows.
+Local FP32 has lower median latency on loopback. Protected decisions
+match the FP32 reference for their layout. On 160M, reordering lowers
+field-copy accuracy from 113/144 to 77/144 and raises SST-2 sample
+accuracy from 80/128 to 94/128. An exhaustive gate preserves all 288
+paired decisions and rejects two thirds of the 160M rewrite candidates.
+We measure certification cost and project the reuse needed to recover
+it. The prototype protects one attention head and the output projection
+under trusted-dealer, semi-honest two-party computation. The client runs
+the remaining operations. The results separate reductions in secure
+work from model and task sensitivity to input order.
 \keywords{Decentralized inference \and Privacy \and Graph compilation \and MPC}
 \end{abstract}
 
@@ -142,10 +138,12 @@ privacy-closure label for a hidden state at position $t$ is
   q_t=\bigvee_{i\leq t}s_i,\qquad
   F_{\rm safe}=\frac{1}{L}\sum_{t=1}^{L}(1-q_t).
 \end{equation}
-Consequently, an approved public \emph{suffix} that follows private text is not automatically safe for plaintext execution: its hidden states can depend on earlier secrets. A public prefix followed by a private suffix is different. This conservative dependency rule depends on causal dense attention; explicit architectural block sparsity or correctly justified declassification may alter it. The rewrite compiler can change the $s_i$ actually presented to each model invocation, so task-level decisions must precede operator-level closure. For $k$ uniformly
-placed private positions among $L$ tokens, the $k+1$ public gaps are
-exchangeable and sum to $L-k$. The expected public prefix length is therefore
-$(L-k)/(k+1)$, giving $F_{\rm safe}=15\%$ in expectation at $L=16,k=4$.
+Under dense causality, even approved suffix states can depend on earlier
+secrets. Sparse masks or justified declassification can change closure.
+The compiler computes closure after rewriting because the rewrite changes
+$s_i$. With $k$ uniformly placed private positions in $L$ tokens, the
+$k+1$ public gaps are exchangeable and sum to $L-k$. The expected prefix
+is $(L-k)/(k+1)$, giving $F_{\rm safe}=15\%$ at $L=16,k=4$.
 
 \paragraph{Compilation order and rejection.}
 The proposed compiler checks public-output dependencies, artifact metadata and
@@ -551,6 +549,22 @@ Model & Tokens & Admitted & Positive & Setup (ms) & Warm ratio & Break-even\\
 \end{tabular}
 \end{table}
 
+\paragraph{External text.}
+We sample 64 negative and 64 positive examples from the official GLUE
+SST-2 development split~\cite{sst,glue}. Each review is treated as the
+private span. Both prompts use the same two single-token labels and
+end with a sentiment query. Moving a fixed public instruction ahead
+of the review expands the approved prefix from 18 to 33 tokens.
+Lengths (42--89 tokens), token multisets and private spans match
+exactly. A fixed label scores 64/128. Native correct counts change
+from 65 to 68 for 70M and from 80 to 94 for 160M, out of 128. On
+160M, 20 reviews change from wrong to correct and six regress.
+All 512 TCP executions agree with the corresponding native choices.
+Mean QK peer openings fall from 1.990 to 0.908 MB in both models.
+The 160M accuracy change reverses the direction on synthetic field
+copying. This check concerns one fixed prompt pair and unrestricted
+review text outside the enumerated certificate domain.
+
 \section{Related Work}
 PPMI, PRISM, MINIM, Agentic-PPML and Split-and-Denoise separate
 public assistance from private state through distinct policies and threat
@@ -569,19 +583,15 @@ Petals and PlanetServe study distributed inference. SWARM studies
 training across heterogeneous workers~\cite{petals,planetserve,swarm}.
 
 \section{Limitations, Ethics, and Conclusion}
-The operator experiments cover two checkpoints from one pretrained
-model family, synthetic records and a single trusted loopback host.
-The client runs prefill outside
-the measured operators and performs the final constrained choice. Public
-selectors and request dimensions remain visible to workers. Masks and
-correlations are fresh per invocation. The measurements characterize
-specific protected operators under semi-honest non-collusion and a trusted
-dealer. Full-model generation, WAN deployment and active security require
-separate evaluation. Typed record equivalence supports the privacy
-analysis. Model-specific quality validation is a separate requirement
-for deploying the rewrite. The executable planner considers one rewrite
-and the arithmetic cost of one operator. The general cost model includes
-cache reuse, placement and protocol choice.
+Experiments cover two checkpoints in one family, synthetic records,
+an SST-2 sample and one loopback host. The client runs the remaining
+prefill operations and final choice. Workers see public selectors and request
+dimensions. Each run uses fresh masks and correlations under semi-honest
+non-collusion and a trusted dealer. Full generation, WAN and active
+security require separate evaluation. Record equivalence supports
+privacy analysis. Deployment also requires task-specific model quality
+validation. The implemented planner costs one operator and one rewrite.
+The general objective includes cache reuse, placement and protocol choice.
 
 \paragraph{Code and data availability.}
 Scripts, checkpoint identifiers, per-request archives and verification
@@ -597,7 +607,7 @@ Measurements come from executable evaluations and archived records.
 \subsubsection{\discintname} The authors declare no competing interests relevant to this work.
 \end{credits}
 
-\begin{thebibliography}{30}
+\begin{thebibliography}{32}
 \bibitem{petals} Borzunov, A., et al.: Petals: Collaborative inference and fine-tuning of large models. ACL System Demonstrations (2023)
 \bibitem{planetserve} Fang, F., et al.: PlanetServe: A decentralized, scalable, and privacy-preserving overlay for democratizing large language model serving. NSDI (2026)
 \bibitem{ppmi} Bae, Y., et al.: PPMI: Privacy-preserving LLM interaction with Socratic chain-of-thought reasoning and homomorphically encrypted vector databases. arXiv:2506.17336 (2025)
@@ -610,6 +620,8 @@ Measurements come from executable evaluations and archived records.
 \bibitem{shareroute-source} ShareRoute: Adaptive secret-shared inference for untrusted GPU networks. Source manuscript (2026)
 \bibitem{pythia} Biderman, S., et al.: Pythia: A suite for analyzing large language models across training and scaling. ICML, PMLR 202, 2397--2430 (2023)
 \bibitem{beaver} Beaver, D.: Efficient multiparty protocols using circuit randomization. In: Advances in Cryptology -- CRYPTO '91, pp. 420--432. Springer (1992)
+\bibitem{sst} Socher, R., et al.: Recursive deep models for semantic compositionality over a sentiment treebank. EMNLP, 1631--1642 (2013)
+\bibitem{glue} Wang, A., et al.: GLUE: A multi-task benchmark and analysis platform for natural language understanding. BlackboxNLP, 353--355 (2018)
 \bibitem{minim} Yu, H., et al.: MINIM: Privacy-aware minimal view for agents via trusted local sanitization. ICML, PMLR 306 (2026)
 \bibitem{agenticppml} Zhang, M., Liu, Z., Huang, J., Liu, X.: Agentic privacy-preserving machine learning. arXiv:2508.02836 (2025)
 \bibitem{splitdenoise} Mai, P., et al.: Split-and-denoise: Protect large language model inference with local differential privacy. ICML (2024)

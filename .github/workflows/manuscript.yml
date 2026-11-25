@@ -43,6 +43,7 @@ jobs:
           python3 experiments/layout_quality_gate.py experiments/results/cross_layer_scale_cases.csv
           python3 experiments/layout_quality_gate.py experiments/results/cross_layer_scale_160m_cases.csv
           python3 experiments/check_layout_quality_gate.py experiments/results --transport tcp
+          python3 experiments/check_sst2_layout.py experiments/results --require-full-tcp
           python3 experiments/figure_data.py --check
           python3 experiments/check_manuscript_evidence.py main.pdf
       - name: Upload the PDF

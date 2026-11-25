@@ -151,6 +151,26 @@ exclude connection setup and reference checks. Break-even figures
 project reuse from per-schema timings and are defined only for admitted
 schemas with positive measured mean warm savings.
 
+## Reproduce the SST-2 layout check
+
+Download the official GLUE SST-2 archive and use the two pinned checkpoints.
+
+```bash
+curl -fL https://dl.fbaipublicfiles.com/glue/data/SST-2.zip -o SST-2.zip
+TOKENIZERS_PARALLELISM=false python3 experiments/run_sst2_layout.py \
+  --dataset-zip SST-2.zip --checkpoint-70m /path/to/70m \
+  --checkpoint-160m /path/to/160m --protected-count 128 \
+  --transport tcp --output ./sst2-rerun
+python3 experiments/check_sst2_layout.py ./sst2-rerun --require-full-tcp \
+  --dataset-zip SST-2.zip --tokenizer /path/to/70m/tokenizer.json
+```
+
+The runner verifies the archive and development TSV hashes. It uses a
+fixed balanced sample without replacement, scores the same two labels in
+each layout, and compares the complete native and protected runs on TCP.
+The archived CSV contains dataset row IDs, digests, predictions and
+protocol counts. The benchmark text stays in the source dataset.
+
 ## Reproduce the matched rewrite × island ablation
 
 Run from the repository root with Python 3.9+:

@@ -402,3 +402,46 @@ canonical matched inputs, confirms all eight model decisions per
 certificate and recomputes protocol bytes and projected counts. These
 are finite-domain, one-host measurements using two checkpoints in
 one model family.
+
+
+
+## External-text control on GLUE SST-2
+
+The run uses 128 rows sampled without replacement from the official
+872-row development split, with 64 rows per label and a fixed seed of
+20271122. The dataset ZIP and dev.tsv have pinned SHA-256 digests.
+SST-2 is public, and the experiment treats each review as the private
+input for the protocol. The runner stores sample IDs and hashes.
+It does not redistribute the source text.
+
+Two fixed zero-shot layouts move a public note while leaving the final
+sentiment query and label set unchanged. On every pair, lengths of
+42–89 tokens, token inventories and private tokens match. The
+approved prefix grows from 18 to 33 tokens. One attention head and
+a two-row head projection use the same dealer-assisted 2PC backend as
+the other Pythia trials. The result records 512 TCP executions in total
+over the two checkpoints and layouts, with exact ring checks and
+agreement with each layout's native FP32 prediction throughout.
+
+| Model | Original correct | Rewritten correct | Same decisions | Correct lost | Correct gained |
+|---|---:|---:|---:|---:|---:|
+| 70M | 65/128 | 68/128 | 113/128 | 6 | 9 |
+| 160M | 80/128 | 94/128 | 102/128 | 6 | 20 |
+
+Mean QK peer openings fall from 1,990,368 to 907,968 bytes for either
+checkpoint. The independent check verifies all 256 prompt layouts
+against the official ZIP, re-tokenizes them and recomputes stage bytes.
+The two models use the same tokenized inputs. A pair-level descriptive
+bootstrap gives accuracy changes of 2.34 percentage points for 70M
+(95% interval [-3.13, 8.59]) and 10.94 points for 160M
+(95% interval [3.13, 18.75]). For 70M, correct negative predictions rise
+from 55 to 63 of 64, whereas correct positives fall from 10 to 5 of 64.
+In the 160M result the direction of the accuracy change
+reverses relative to synthetic field copying. The structured-record
+gate certifies a specified finite binding domain. This experiment
+characterizes prompt sensitivity on a fixed SST-2 validation sample
+and does not certify unrestricted review text.
+
+Sources: [SST](https://aclanthology.org/D13-1170/),
+[GLUE](https://aclanthology.org/W18-5446/),
+[official distribution ZIP](https://dl.fbaipublicfiles.com/glue/data/SST-2.zip).
