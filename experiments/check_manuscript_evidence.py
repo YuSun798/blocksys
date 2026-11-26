@@ -235,7 +235,7 @@ paper = subprocess.check_output(["pdftotext", "-layout", args.pdf, "-"], text=Tr
 if re.search(r"\b(?:TODO|TBD|lorem ipsum|contribution title|title suppressed)\b|\?\?",
              paper, re.IGNORECASE):
     raise SystemExit("The compiled PDF contains a placeholder or unresolved reference.")
-for heading in ("Compile on the trusted client", "Disclosure of Interests"):
+for heading in ("Proposed cross-layer planning", "Measured Pythia prefill", "Disclosure of Interests"):
     if heading not in paper:
         raise SystemExit(f"Expected manuscript content missing: {heading}")
 if "The authors declare no competing interests relevant to this work." not in " ".join(paper.split()):

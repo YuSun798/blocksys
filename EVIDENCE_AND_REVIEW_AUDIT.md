@@ -319,6 +319,23 @@ and reconciles row-level accuracy and timing summaries. Local parsing
 gets 288/288 fields. The interaction between disclosure and offload is
 evaluated with a fixed number of private tokens and one protected QK head.
 
+## Figure 1 illustration provenance
+
+Gemini Apps' Nano Banana rendered a visual reference from a two-panel
+specification. The first panel shows typed rewriting, privacy closure,
+optional public artifact reuse and policy-eligible routes. The second
+shows the measured selective Pythia prefill and separate QK and projection
+worker pairs. The vector figure follows the generated bands, stage
+cards and paired worker tiles. It uses the implemented share directions
+and places logit reconstruction after the projection.
+
+Visual references included [RLHFless Fig. 5](https://arxiv.org/pdf/2602.22718#page=4),
+[FlexPipe Figs. 5–6](https://www.usenix.org/system/files/atc25-zhao-hairui.pdf),
+and [DistServe Fig. 6](https://www.usenix.org/system/files/osdi24-zhong-yinmin.pdf).
+The captured Nano Banana reference is saved at
+`figures/compiler-nano-banana.jpg` (1401 × 692, SHA-256
+`06117b77c0ede24e0fe2f94224491d4862a23d4d8fb1f48892d395224f984e1c`).
+
 ## Record-layout illustration provenance
 
 Gemini Apps' Nano Banana image tool rendered a conceptual figure from

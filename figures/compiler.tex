@@ -1,24 +1,89 @@
 \begin{tikzpicture}[
-  x=1cm,y=1cm, font=\small,
-  block/.style={draw=black!70,rounded corners=1pt,fill=white,align=center,
-                minimum height=.94cm,text width=3.25cm,inner sep=3pt},
-  flow/.style={-{Stealth[length=2mm]},semithick},
-  guide/.style={-{Stealth[length=2mm]},semithick,dashed}]
-\node[anchor=west,font=\small\bfseries] at (-.04,1.08) {(a) Compile on the trusted client};
-\node[block] (input) at (1.78,.38) {Request and\\disclosure policy};
-\node[block,draw=routeLocal,fill=routeLocal!10] (task) at (6.08,.38) {\textbf{PriGraph}\\Rewrite the task DAG};
-\node[block,draw=routeLocal,fill=routeLocal!10] (op) at (10.38,.38) {\textbf{ShareRoute}\\Operator trace and labels};
-\draw[flow] (input) -- (task);
-\draw[flow] (task) -- (op);
-\node[anchor=west,font=\small\bfseries] at (-.04,-.78) {(b) Execute the selected plan};
-\node[block,draw=routeLocal,fill=routeLocal!10] (local) at (1.78,-2.04) {\textbf{Trusted client}\\Bind inputs and decode};
-\node[block,draw=routePublic,fill=routePublic!12] (public) at (6.08,-2.04) {\textbf{Public peers}\\Approved plaintext};
-\node[block,draw=routeSecure,fill=routeSecure!24] (secure) at (10.38,-2.04) {\textbf{MPC parties}\\Secret-shared operands};
-\draw[guide] (op.south) -- (10.38,-1.13) -- (1.78,-1.13) -- (local.north);
-\draw[guide] (6.08,-1.13) -- (public.north);
-\draw[guide] (10.38,-1.13) -- (secure.north);
-\draw[flow,routePublic] (public.south) -- ++(0,-.28) -| ([xshift=-.38cm]local.south);
-\draw[flow,routeSecure] (secure.south) -- ++(0,-.61) -| ([xshift=.38cm]local.south);
-\node[fill=white,font=\footnotesize] at (3.85,-2.75) {Public artifact};
-\node[fill=white,font=\footnotesize] at (7.93,-3.08) {Result shares};
+  x=1cm,y=1cm,
+  font=\sffamily\fontsize{8}{9.4}\selectfont,
+  ink/.style={text=black!87},
+  panel/.style={anchor=west,ink,font=\sffamily\bfseries\fontsize{9}{10}\selectfont},
+  detail/.style={ink,font=\sffamily\fontsize{7.4}{8.5}\selectfont},
+  tile/.style={rounded corners=1.5pt,semithick,align=center,ink,inner sep=2pt},
+  stage/.style={tile,draw=routeLocal!80,fill=white,text width=2.43cm,minimum height=8mm},
+  route/.style={tile,minimum height=6.8mm,minimum width=2.05cm},
+  worker/.style={tile,draw=routeSecure!80,fill=white,minimum width=1.12cm,minimum height=3.6mm},
+  token/.style={tile,ink,font=\sffamily\fontsize{7}{8}\selectfont,
+                minimum width=5.5mm,minimum height=3.1mm,inner sep=.7pt},
+  flow/.style={semithick,-{Stealth[length=1.9mm]},draw=routeLocal},
+  plan/.style={flow,dashed},
+  wire/.style={flow,draw=routeSecure!94!black}]
+
+\node[panel] at (.04,0) {(a) Proposed cross-layer planning};
+\draw[rounded corners=2pt,semithick,draw=routeLocal!70,fill=routeLocal!5]
+  (0,-.25) rectangle (12.12,-2.41);
+
+\node[stage] (request) at (1.49,-.82) {\textbf{Request policy}\\Schema and rights};
+\node[stage,text width=2.50cm] (rewrite) at (4.54,-.82) {};
+\node[ink,font=\sffamily\bfseries\fontsize{8}{9.4}\selectfont] at (4.54,-.65) {PriGraph rewrite};
+\node[token,draw=routeSecure!70,fill=routeSecure!17] at (3.55,-.99) {Value};
+\node[token,draw=routePublic!70,fill=routePublic!16] at (4.15,-.99) {Note};
+\draw[flow,-{Stealth[length=1.35mm]}] (4.45,-.99) -- (4.64,-.99);
+\node[token,draw=routePublic!70,fill=routePublic!16] at (4.94,-.99) {Note};
+\node[token,draw=routeSecure!70,fill=routeSecure!17] at (5.54,-.99) {Value};
+\node[stage] (closure) at (7.59,-.82) {\textbf{ShareRoute}\\Operator closure};
+\node[stage] (choose) at (10.64,-.82) {\textbf{Select a legal plan}\\Policy and cost};
+\draw[flow] (request) -- (rewrite);
+\draw[flow] (rewrite) -- (closure);
+\draw[flow] (closure) -- (choose);
+
+\node[tile,draw=routePublic!85,dashed,fill=routePublic!7,minimum width=2.96cm,minimum height=6.8mm]
+  (cache) at (2.33,-1.97) {\textbf{Public artifact cache}\\Keys from public data};
+\node[route,draw=routeLocal!80,fill=routeLocal!9]
+  (local) at (6.12,-1.97) {\textbf{Trusted local}\\Client compute};
+\node[route,draw=routePublic!85,fill=routePublic!10]
+  (public) at (8.48,-1.97) {\textbf{Public peers}\\Approved plaintext};
+\node[route,draw=routeSecure!90,fill=routeSecure!12]
+  (islands) at (10.84,-1.97) {\textbf{MPC islands}\\Secret shares};
+\draw[plan,draw=routePublic] (rewrite.south) -- (4.54,-1.38) -| (cache.north);
+\draw[plan] (choose.south) -- (10.64,-1.39) -| (local.north);
+\draw[plan,draw=routePublic] (8.48,-1.39) -- (public.north);
+\draw[plan,draw=routeSecure] (10.64,-1.39) -| (islands.north);
+
+\node[panel] at (.04,-2.67) {(b) Measured Pythia prefill\enspace\mdseries (TCP loopback, selective route)};
+\draw[rounded corners=2pt,semithick,draw=routeLocal!70,fill=routeLocal!6]
+  (0,-2.93) rectangle (12.12,-4.18);
+\node[detail,anchor=west,text=routeLocal,font=\sffamily\bfseries\fontsize{7.4}{8.5}\selectfont]
+  at (.16,-3.09) {Trusted client and dealer};
+\node[stage] (qkInput) at (1.49,-3.68) {\textbf{Serialize prompt}\\Post-RoPE $Q,K$};
+\node[stage] (qkOutput) at (4.54,-3.68) {\textbf{Restore QK scores}\\Softmax and $AV$};
+\node[stage] (hidden) at (7.59,-3.68) {\textbf{Finish prefill}\\Quantize final state};
+\node[stage] (label) at (10.64,-3.68) {\textbf{Restore logits}\\Choose label};
+\draw[flow] (qkOutput) -- (hidden);
+
+\draw[rounded corners=2pt,semithick,draw=routeSecure!80,fill=routeSecure!9]
+  (.29,-5.24) rectangle (5.75,-6.15);
+\draw[rounded corners=2pt,semithick,draw=routeSecure!80,fill=routeSecure!9]
+  (6.38,-5.24) rectangle (11.84,-6.15);
+\node[ink] at (3.02,-5.42) {\textbf{QK worker pair}\enspace Single-head scores};
+\node[ink] at (9.11,-5.42) {\textbf{Projection worker pair}\enspace Share-local};
+\node[worker] (qa) at (1.49,-5.89) {Party 0};
+\node[worker] (qb) at (4.54,-5.89) {Party 1};
+\node[worker] at (7.59,-5.89) {Party 0};
+\node[worker] at (10.64,-5.89) {Party 1};
+\draw[semithick,draw=routeSecure!94!black,{Stealth[length=1.5mm]}-{Stealth[length=1.5mm]}]
+  (qa) -- node[detail,above,inner sep=1pt] {Masked openings} (qb);
+
+\draw[wire] (qkInput.south) -- (1.49,-5.24);
+\draw[wire] (4.54,-5.24) -- (qkOutput.south);
+\draw[wire] (hidden.south) -- (7.59,-5.24);
+\draw[wire] (10.64,-5.24) -- (label.south);
+\node[detail,anchor=west,align=left] at (1.61,-4.64)
+  {Approved $Q,K$ prefix\\Private $Q,K$ shares\\Fresh correlation shares};
+\node[detail,anchor=west] at (4.66,-4.94) {Score shares};
+\node[detail,anchor=west,align=left] at (7.72,-4.58)
+  {Fresh hidden shares\\Authorized row IDs};
+\node[detail,anchor=east] at (10.54,-5.00) {Logit shares};
+
+\draw[flow] (.17,-6.43) -- (.66,-6.43);
+\node[detail,anchor=west] at (.72,-6.43) {Computation or data flow};
+\draw[plan] (4.38,-6.43) -- (4.87,-6.43);
+\node[detail,anchor=west] at (4.93,-6.43) {Proposed routing or reuse};
+\draw[wire] (8.63,-6.43) -- (9.12,-6.43);
+\node[detail,anchor=west] at (9.18,-6.43) {Protected operator traffic};
 \end{tikzpicture}

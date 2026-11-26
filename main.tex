@@ -112,11 +112,13 @@ typed serializer and an instrumented Pythia attention layer
 \begin{figure}[t]
 \centering
 \input{figures/compiler}
-\Description{A task graph and reusable public artifact feed an operator graph with privacy labels. The planner routes approved plaintext to public peers and protected operators to two-party computation. The trusted client receives and combines the outputs.}
-\caption{Proposed compiler and execution paths. Task rewriting can expose
-reusable public programs before operator closure identifies secure subgraphs.
-Dashed arrows assign work to execution domains. Solid arrows show compilation
-flow or results returned to the client.}
+\Description{Panel a follows the policy from task rewriting to operator closure and proposed execution routes, with a public artifact cache. Panel b shows the trusted client sending approved Q and K vectors, private shares and fresh correlation shares to one worker pair. The pair returns score shares. After reconstructing scores and finishing prefill locally, the client sends fresh hidden-state shares to a separate projection pair and reconstructs its returned logit shares.}
+\caption{From policy to execution. (a) The proposed planner traces model
+calls after rewriting and selects a legal route. The note is approved
+and the value is private. (b) The measured selective Pythia path
+reconstructs single-head QK scores on the client, finishes prefill locally
+and sends fresh shares for output projection.
+Vector adaptation of a Gemini Nano Banana rendering.}
 \label{fig:arch}
 \end{figure}
 
@@ -599,8 +601,9 @@ commands are available at
 \begin{credits}
 \subsubsection{\ackname} OpenAI Codex assisted with consolidating and
 editing the manuscript and preparing experiment code. Gemini Nano Banana
-rendered the geometric reference for the vector record-layout schematic
-in Fig.~\ref{fig:record-lift} from the template specification.
+rendered visual references for the vector schematics in
+Figs.~\ref{fig:arch} and~\ref{fig:record-lift} from the method and layout
+specifications.
 Measurements come from executable evaluations and archived records.
 \subsubsection{\discintname} The authors declare no competing interests relevant to this work.
 \end{credits}
