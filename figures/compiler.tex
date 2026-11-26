@@ -1,89 +1,205 @@
 \begin{tikzpicture}[
-  x=1cm,y=1cm,
-  font=\sffamily\fontsize{8}{9.4}\selectfont,
+  x=1cm,y=.96cm,
+  font=\sffamily\fontsize{8}{9.3}\selectfont,
   ink/.style={text=black!87},
   panel/.style={anchor=west,ink,font=\sffamily\bfseries\fontsize{9}{10}\selectfont},
-  detail/.style={ink,font=\sffamily\fontsize{7.4}{8.5}\selectfont},
+  detail/.style={ink,font=\sffamily\fontsize{7.3}{8.5}\selectfont},
   tile/.style={rounded corners=1.5pt,semithick,align=center,ink,inner sep=2pt},
-  stage/.style={tile,draw=routeLocal!80,fill=white,text width=2.43cm,minimum height=8mm},
-  route/.style={tile,minimum height=6.8mm,minimum width=2.05cm},
-  worker/.style={tile,draw=routeSecure!80,fill=white,minimum width=1.12cm,minimum height=3.6mm},
-  token/.style={tile,ink,font=\sffamily\fontsize{7}{8}\selectfont,
-                minimum width=5.5mm,minimum height=3.1mm,inner sep=.7pt},
-  flow/.style={semithick,-{Stealth[length=1.9mm]},draw=routeLocal},
+  stage/.style={tile,draw=routeLocal!80,fill=white,text width=2.43cm,minimum height=10mm},
+  stage label/.style={ink,font=\sffamily\bfseries\fontsize{8}{9.3}\selectfont},
+  route tile/.style={tile,minimum height=6.8mm,minimum width=2.14cm},
+  route label/.style={stage label,anchor=west,inner sep=1pt,
+                       font=\sffamily\bfseries\fontsize{7.3}{8.5}\selectfont},
+  glyph/.style={semithick,draw=routeLocal,rounded corners=.5pt},
+  approved/.style={glyph,draw=routePublic,fill=routePublic!24},
+  private/.style={glyph,draw=routeSecure,fill=routeSecure!17},
+  share/.style={glyph,draw=routeSecure!90!black,fill=white},
+  flow/.style={semithick,-{Stealth[length=1.8mm]},draw=routeLocal},
   plan/.style={flow,dashed},
-  wire/.style={flow,draw=routeSecure!94!black}]
+  wire/.style={flow,draw=routeSecure!94!black},
+  micro flow/.style={flow,-{Stealth[length=1.05mm]}},
+  pics/note/.style={code={
+    \draw[approved] (-.18,-.15) -- (-.18,.15) -- (.09,.15) -- (.18,.06) -- (.18,-.15) -- cycle;
+    \draw[glyph,draw=routePublic] (.09,.15) |- (.18,.06) (-.11,-.03) -- (.10,-.03) (-.11,-.09) -- (.07,-.09);
+  }},
+  pics/value/.style={code={
+    \draw[private] (-.18,-.15) rectangle (.18,.15);
+    \draw[routeSecure,thin] (-.13,-.08) -- (.01,.09) (-.04,-.09) -- (.11,.09) (.06,-.09) -- (.13,-.01);
+  }},
+  pics/share/.style={code={
+    \draw[share] (-.15,-.085) rectangle (.15,.085);
+    \draw[routeSecure,thin] (-.03,-.085) -- (.03,.085);
+  }},
+  pics/rack/.style={code={
+    \draw[share] (-.25,-.16) rectangle (.25,.16);
+    \draw[routeSecure,thin] (-.25,0) -- (.25,0) (-.07,.08) -- (.17,.08) (-.07,-.08) -- (.17,-.08);
+    \fill[routeSecure] (-.16,.08) circle (.023) (-.16,-.08) circle (.023);
+  }}]
 
 \node[panel] at (.04,0) {(a) Proposed cross-layer planning};
 \draw[rounded corners=2pt,semithick,draw=routeLocal!70,fill=routeLocal!5]
-  (0,-.25) rectangle (12.12,-2.41);
-
-\node[stage] (request) at (1.49,-.82) {\textbf{Request policy}\\Schema and rights};
-\node[stage,text width=2.50cm] (rewrite) at (4.54,-.82) {};
-\node[ink,font=\sffamily\bfseries\fontsize{8}{9.4}\selectfont] at (4.54,-.65) {PriGraph rewrite};
-\node[token,draw=routeSecure!70,fill=routeSecure!17] at (3.55,-.99) {Value};
-\node[token,draw=routePublic!70,fill=routePublic!16] at (4.15,-.99) {Note};
-\draw[flow,-{Stealth[length=1.35mm]}] (4.45,-.99) -- (4.64,-.99);
-\node[token,draw=routePublic!70,fill=routePublic!16] at (4.94,-.99) {Note};
-\node[token,draw=routeSecure!70,fill=routeSecure!17] at (5.54,-.99) {Value};
-\node[stage] (closure) at (7.59,-.82) {\textbf{ShareRoute}\\Operator closure};
-\node[stage] (choose) at (10.64,-.82) {\textbf{Select a legal plan}\\Policy and cost};
+  (0,-.25) rectangle (12.12,-2.49);
+\node[stage] (request) at (1.49,-.91) {};
+\node[stage] (rewrite) at (4.54,-.91) {};
+\node[stage] (closure) at (7.59,-.91) {};
+\node[stage] (choose) at (10.64,-.91) {};
 \draw[flow] (request) -- (rewrite);
 \draw[flow] (rewrite) -- (closure);
 \draw[flow] (closure) -- (choose);
+\node[stage label] at (1.49,-1.24) {Request policy};
+\node[stage label] at (4.54,-1.24) {PriGraph rewrite};
+\node[stage label] at (7.59,-1.24) {ShareRoute closure};
+\node[stage label] at (10.64,-1.24) {Select a legal plan};
 
-\node[tile,draw=routePublic!85,dashed,fill=routePublic!7,minimum width=2.96cm,minimum height=6.8mm]
-  (cache) at (2.33,-1.97) {\textbf{Public artifact cache}\\Keys from public data};
-\node[route,draw=routeLocal!80,fill=routeLocal!9]
-  (local) at (6.12,-1.97) {\textbf{Trusted local}\\Client compute};
-\node[route,draw=routePublic!85,fill=routePublic!10]
-  (public) at (8.48,-1.97) {\textbf{Public peers}\\Approved plaintext};
-\node[route,draw=routeSecure!90,fill=routeSecure!12]
-  (islands) at (10.84,-1.97) {\textbf{MPC islands}\\Secret shares};
-\draw[plan,draw=routePublic] (rewrite.south) -- (4.54,-1.38) -| (cache.north);
-\draw[plan] (choose.south) -- (10.64,-1.39) -| (local.north);
-\draw[plan,draw=routePublic] (8.48,-1.39) -- (public.north);
-\draw[plan,draw=routeSecure] (10.64,-1.39) -| (islands.north);
+\begin{scope}[shift={(1.49,-.78)}]
+  \draw[glyph,fill=routeLocal!8] (-.36,-.23) -- (-.36,.23) -- (.21,.23) -- (.36,.08) -- (.36,-.23) -- cycle;
+  \draw[glyph] (.21,.23) |- (.36,.08) (-.08,.085) -- (.13,.085) (-.08,-.035) -- (.18,-.035) (-.08,-.155) -- (.18,-.155);
+  \draw[routePublic,semithick] (-.25,.09) -- (-.21,.05) -- (-.14,.12)
+    (-.25,-.03) -- (-.21,-.07) -- (-.14,0) (-.25,-.15) -- (-.21,-.19) -- (-.14,-.12);
+\end{scope}
+\pic at (3.73,-.78) {value};
+\pic at (4.14,-.78) {note};
+\draw[micro flow] (4.37,-.78) -- (4.71,-.78);
+\pic at (4.94,-.78) {note};
+\pic at (5.35,-.78) {value};
+\begin{scope}[shift={(7.59,-.79)}]
+  \draw[micro flow] (-.65,.14) -- (-.22,.14);
+  \draw[micro flow] (-.71,-.12) -- (-.22,-.16);
+  \draw[micro flow] (-.11,.06) -- (.20,-.10);
+  \draw[micro flow] (-.04,-.16) -- (.20,-.16);
+  \draw[micro flow] (.36,-.16) -- (.64,-.16);
+  \draw[approved] (-.73,.14) circle (.075) (-.14,.14) circle (.075);
+  \draw[private] (-.78,-.19) rectangle (-.64,-.05)
+    (-.20,-.23) rectangle (-.06,-.09) (.21,-.23) rectangle (.35,-.09)
+    (.65,-.23) rectangle (.79,-.09);
+\end{scope}
+\begin{scope}[shift={(10.64,-.78)}]
+  \draw[glyph,fill=routeLocal!8] (-.19,.22) rectangle (.19,.01);
+  \draw[routePublic,semithick] (-.08,.12) -- (-.025,.07) -- (.08,.17);
+  \draw[glyph] (0,.01) -- (0,-.09) (-.55,-.09) -- (.55,-.09);
+  \draw[micro flow] (-.55,-.09) -- (-.55,-.24);
+  \draw[micro flow,draw=routePublic] (0,-.09) -- (0,-.24);
+  \draw[micro flow,draw=routeSecure] (.55,-.09) -- (.55,-.24);
+\end{scope}
 
-\node[panel] at (.04,-2.67) {(b) Measured Pythia prefill\enspace\mdseries (TCP loopback, selective route)};
+\node[route tile,draw=routePublic!85,dashed,fill=routePublic!7,minimum width=3.23cm]
+  (cache) at (2.33,-2.07) {};
+\node[route tile,draw=routeLocal!80,fill=routeLocal!9] (local) at (6.12,-2.07) {};
+\node[route tile,draw=routePublic!85,fill=routePublic!10] (public) at (8.48,-2.07) {};
+\node[route tile,draw=routeSecure!90,fill=routeSecure!12] (islands) at (10.84,-2.07) {};
+\draw[plan,draw=routePublic] (rewrite.south) -- (4.54,-1.53) -| (cache.north);
+\draw[plan] (choose.south) -- (10.64,-1.53) -| (local.north);
+\draw[plan,draw=routePublic] (8.48,-1.53) -- (public.north);
+\draw[plan,draw=routeSecure] (10.64,-1.53) -| (islands.north);
+\begin{scope}[shift={(1.13,-2.07)}]
+  \draw[approved] (-.18,.13) arc (180:360:.18 and .061) -- (.18,-.13)
+    arc (0:-180:.18 and .061) -- cycle;
+  \draw[approved] (0,.13) ellipse (.18 and .061);
+  \draw[routePublic,thin] (-.18,-.035) arc (180:360:.18 and .061);
+\end{scope}
+\node[route label] at (1.44,-2.07) {Public artifact cache};
+\begin{scope}[shift={(5.36,-2.07)}]
+  \draw[glyph,fill=white] (-.17,-.08) rectangle (.17,.13);
+  \draw[glyph,fill=routeLocal!25] (-.17,-.08) -- (-.23,-.15) -- (.23,-.15) -- (.17,-.08) -- cycle;
+\end{scope}
+\node[route label] at (5.64,-2.07) {Trusted local};
+\begin{scope}[shift={(7.76,-2.07)}]
+  \draw[routePublic,semithick] (-.16,-.09) -- (0,.12) -- (.16,-.09) -- cycle;
+  \draw[approved] (-.16,-.09) circle (.065) (0,.12) circle (.065) (.16,-.09) circle (.065);
+\end{scope}
+\node[route label] at (8.02,-2.07) {Public peers};
+\pic at (10.16,-2.07) {share};
+\node[route label] at (10.37,-2.07) {MPC islands};
+
+\node[panel] at (.04,-2.81) {(b) Measured Pythia prefill\enspace\mdseries (TCP loopback, selective route)};
 \draw[rounded corners=2pt,semithick,draw=routeLocal!70,fill=routeLocal!6]
-  (0,-2.93) rectangle (12.12,-4.18);
-\node[detail,anchor=west,text=routeLocal,font=\sffamily\bfseries\fontsize{7.4}{8.5}\selectfont]
-  at (.16,-3.09) {Trusted client and dealer};
-\node[stage] (qkInput) at (1.49,-3.68) {\textbf{Serialize prompt}\\Post-RoPE $Q,K$};
-\node[stage] (qkOutput) at (4.54,-3.68) {\textbf{Restore QK scores}\\Softmax and $AV$};
-\node[stage] (hidden) at (7.59,-3.68) {\textbf{Finish prefill}\\Quantize final state};
-\node[stage] (label) at (10.64,-3.68) {\textbf{Restore logits}\\Choose label};
+  (0,-3.07) rectangle (12.12,-4.58);
+\node[stage label,anchor=west,text=routeLocal] at (.16,-3.24) {Trusted client and dealer};
+\node[stage] (qkInput) at (1.49,-4.00) {};
+\node[stage] (qkOutput) at (4.54,-4.00) {};
+\node[stage] (hidden) at (7.59,-4.00) {};
+\node[stage] (label) at (10.64,-4.00) {};
 \draw[flow] (qkOutput) -- (hidden);
+\node[stage label] at (1.49,-4.33) {Prompt to $Q,K$};
+\node[stage label] at (4.54,-4.33) {Softmax and $AV$};
+\node[stage label] at (7.59,-4.33) {Finish prefill};
+\node[stage label] at (10.64,-4.33) {Choose label};
+
+\begin{scope}[shift={(1.49,-3.88)}]
+  \foreach \i in {0,1} {\draw[approved] ({-.89+.24*\i},-.12) rectangle ++(.19,.24);}
+  \draw[private] (-.41,-.12) rectangle ++(.19,.24);
+  \draw[routeSecure,thin] (-.38,-.075) -- (-.25,.075);
+  \draw[micro flow] (-.13,0) -- (.16,0);
+  \node[stage label,draw=routeLocal!75,rounded corners=.5pt,fill=routeLocal!10,inner sep=1.5pt] at (.38,0) {$Q$};
+  \node[stage label,draw=routeLocal!75,rounded corners=.5pt,fill=routeLocal!10,inner sep=1.5pt] at (.75,0) {$K$};
+\end{scope}
+\begin{scope}[shift={(4.54,-3.85)}]
+  \foreach \row in {0,...,3} {\foreach \col in {0,...,3} {
+    \ifnum\col>\row
+      \draw[black!23,line width=.25pt] ({-.62+.12*\col},{.245-.12*\row}) rectangle ++(.10,-.10);
+    \else
+      \draw[routeLocal!70,fill=routeLocal!26,line width=.25pt]
+        ({-.62+.12*\col},{.245-.12*\row}) rectangle ++(.10,-.10);
+    \fi
+  }}
+  \draw[micro flow] (-.02,0) -- (.30,0);
+  \foreach \i in {0,1,2} {\fill[routeLocal!85] ({.45+.14*\i},0) circle (.043);}
+\end{scope}
+\begin{scope}[shift={(7.59,-3.88)}]
+  \foreach \i in {0,1,2} {
+    \draw[glyph,fill=routeLocal!11] ({-.62+.065*\i},{-.19+.105*\i})
+      rectangle ++(.55,.17);
+  }
+  \draw[micro flow] (.16,0) -- (.45,0);
+  \node[stage label] at (.64,0) {$\widehat{h}$};
+\end{scope}
+\begin{scope}[shift={(10.64,-3.89)}]
+  \draw[glyph,fill=routeLocal!18] (-.55,.065) rectangle (.09,.18);
+  \draw[glyph,fill=routeLocal!44] (-.55,-.14) rectangle (.37,-.025);
+  \draw[routeLocal,semithick] (.49,-.09) -- (.56,-.15) -- (.69,-.035);
+\end{scope}
 
 \draw[rounded corners=2pt,semithick,draw=routeSecure!80,fill=routeSecure!9]
-  (.29,-5.24) rectangle (5.75,-6.15);
+  (.29,-5.62) rectangle (5.75,-6.48);
 \draw[rounded corners=2pt,semithick,draw=routeSecure!80,fill=routeSecure!9]
-  (6.38,-5.24) rectangle (11.84,-6.15);
-\node[ink] at (3.02,-5.42) {\textbf{QK worker pair}\enspace Single-head scores};
-\node[ink] at (9.11,-5.42) {\textbf{Projection worker pair}\enspace Share-local};
-\node[worker] (qa) at (1.49,-5.89) {Party 0};
-\node[worker] (qb) at (4.54,-5.89) {Party 1};
-\node[worker] at (7.59,-5.89) {Party 0};
-\node[worker] at (10.64,-5.89) {Party 1};
+  (6.38,-5.62) rectangle (11.84,-6.48);
+\node[stage label] at (3.02,-5.80) {QK worker pair};
+\node[stage label] at (9.11,-5.80) {Projection worker pair};
+\foreach \x/\p in {1.49/0,4.54/1,7.59/0,10.64/1} {
+  \pic at (\x,-6.20) {rack};
+  \node[detail,anchor=west] at ({\x+.27},-6.20) {\p};
+}
 \draw[semithick,draw=routeSecure!94!black,{Stealth[length=1.5mm]}-{Stealth[length=1.5mm]}]
-  (qa) -- node[detail,above,inner sep=1pt] {Masked openings} (qb);
+  (1.98,-6.20) -- node[detail,above,inner sep=1pt] {Masked openings} (4.27,-6.20);
+\node[detail] at (9.11,-6.18) {Share-local};
 
-\draw[wire] (qkInput.south) -- (1.49,-5.24);
-\draw[wire] (4.54,-5.24) -- (qkOutput.south);
-\draw[wire] (hidden.south) -- (7.59,-5.24);
-\draw[wire] (10.64,-5.24) -- (label.south);
-\node[detail,anchor=west,align=left] at (1.61,-4.64)
-  {Approved $Q,K$ prefix\\Private $Q,K$ shares\\Fresh correlation shares};
-\node[detail,anchor=west] at (4.66,-4.94) {Score shares};
-\node[detail,anchor=west,align=left] at (7.72,-4.58)
-  {Fresh hidden shares\\Authorized row IDs};
-\node[detail,anchor=east] at (10.54,-5.00) {Logit shares};
+\draw[wire] (qkInput.south) -- (1.49,-5.62);
+\draw[wire] (4.54,-5.62) -- (qkOutput.south);
+\draw[wire] (hidden.south) -- (7.59,-5.62);
+\draw[wire] (10.64,-5.62) -- (label.south);
+\draw[approved] (1.62,-4.85) rectangle ++(.19,.14);
+\node[detail,anchor=west] at (1.87,-4.78) {Approved $Q,K$ prefix};
+\pic[scale=.75] at (1.71,-5.04) {share};
+\node[detail,anchor=west] at (1.87,-5.04) {Private $Q,K$ shares};
+\pic[scale=.75] at (1.71,-5.30) {share};
+\node[detail,anchor=west] at (1.87,-5.30) {Fresh correlations};
+\pic[scale=.75] at (4.76,-5.28) {share};
+\node[detail,anchor=west] at (4.91,-5.28) {Score shares};
+\pic[scale=.75] at (7.83,-4.85) {share};
+\node[detail,anchor=west] at (7.99,-4.85) {Fresh hidden shares};
+\draw[glyph,fill=routeLocal!14] (7.73,-5.17) rectangle ++(.20,.12);
+\node[detail,anchor=west] at (7.99,-5.11) {Authorized row IDs};
+\pic[scale=.75] at (10.40,-5.40) {share};
+\node[detail,anchor=east] at (10.27,-5.40) {Logit shares};
 
-\draw[flow] (.17,-6.43) -- (.66,-6.43);
-\node[detail,anchor=west] at (.72,-6.43) {Computation or data flow};
-\draw[plan] (4.38,-6.43) -- (4.87,-6.43);
-\node[detail,anchor=west] at (4.93,-6.43) {Proposed routing or reuse};
-\draw[wire] (8.63,-6.43) -- (9.12,-6.43);
-\node[detail,anchor=west] at (9.18,-6.43) {Protected operator traffic};
+\pic[scale=.7] at (.26,-6.78) {note};
+\node[detail,anchor=west] at (.45,-6.78) {Approved note};
+\pic[scale=.7] at (2.57,-6.78) {value};
+\node[detail,anchor=west] at (2.75,-6.78) {Private value};
+\pic at (4.78,-6.78) {share};
+\node[detail,anchor=west] at (4.99,-6.78) {Secret share};
+\draw[plan] (6.87,-6.78) -- (7.33,-6.78);
+\node[detail,anchor=west] at (7.40,-6.78) {Proposed route};
+\draw[flow] (9.43,-6.78) -- (9.89,-6.78);
+\node[detail,anchor=west] at (9.96,-6.78) {Data flow};
 \end{tikzpicture}

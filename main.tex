@@ -112,13 +112,10 @@ typed serializer and an instrumented Pythia attention layer
 \begin{figure}[t]
 \centering
 \input{figures/compiler}
-\Description{Panel a follows the policy from task rewriting to operator closure and proposed execution routes, with a public artifact cache. Panel b shows the trusted client sending approved Q and K vectors, private shares and fresh correlation shares to one worker pair. The pair returns score shares. After reconstructing scores and finishing prefill locally, the client sends fresh hidden-state shares to a separate projection pair and reconstructs its returned logit shares.}
-\caption{From policy to execution. (a) The proposed planner traces model
-calls after rewriting and selects a legal route. The note is approved
-and the value is private. (b) The measured selective Pythia path
-reconstructs single-head QK scores on the client, finishes prefill locally
-and sends fresh shares for output projection.
-Vector adaptation of a Gemini Nano Banana rendering.}
+\Description{Panel a uses a checklist, a token swap and a dependency graph to show the proposed planner. Panel b uses a triangular score grid, a stack of local layers and candidate score bars to show measured prefill. The trusted client sends approved Q and K vectors, private shares and fresh correlations to one worker pair, which returns score shares. The client then finishes prefill locally, sends fresh hidden-state shares to a separate projection pair and reconstructs its returned logits.}
+\caption{(a) Proposed planning. (b) Measured selective prefill. The client
+recovers one head's QK scores and shares the final state for projection.
+The grid and bars are schematic. Adapted from a Gemini Nano Banana rendering.}
 \label{fig:arch}
 \end{figure}
 

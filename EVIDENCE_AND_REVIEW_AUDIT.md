@@ -325,16 +325,18 @@ Gemini Apps' Nano Banana rendered a visual reference from a two-panel
 specification. The first panel shows typed rewriting, privacy closure,
 optional public artifact reuse and policy-eligible routes. The second
 shows the measured selective Pythia prefill and separate QK and projection
-worker pairs. The vector figure follows the generated bands, stage
-cards and paired worker tiles. It uses the implemented share directions
-and places logit reconstruction after the projection.
+worker pairs. Nano Banana's second rendering adds a policy checklist,
+token glyphs, a causal score grid, layered prefill blocks, candidate
+scores and server icons. The vector figure adapts these illustrations
+to the implemented share directions and places logit reconstruction
+after projection. The grid and bars are schematic.
 
 Visual references included [RLHFless Fig. 5](https://arxiv.org/pdf/2602.22718#page=4),
 [FlexPipe Figs. 5–6](https://www.usenix.org/system/files/atc25-zhao-hairui.pdf),
 and [DistServe Fig. 6](https://www.usenix.org/system/files/osdi24-zhong-yinmin.pdf).
 The captured Nano Banana reference is saved at
-`figures/compiler-nano-banana.jpg` (1401 × 692, SHA-256
-`06117b77c0ede24e0fe2f94224491d4862a23d4d8fb1f48892d395224f984e1c`).
+`figures/compiler-nano-banana.jpg` (1401 × 594, SHA-256
+`f7cee4864c19daf00ebdc0d01250925b4c4c9f8fc5dffba898ea40ca14a50281`).
 
 ## Record-layout illustration provenance
 
