@@ -77,6 +77,15 @@ operator-only, manual and trusted-local controls. We also test whether
 the decisions of both layouts agree across a finite binding domain
 and measure layout sensitivity on SST-2.
 
+Sections~\ref{sec:design} and~\ref{sec:planning} describe the proposed
+design; the experiments implement only the two-layout rewrite with its
+planner and finite-domain gate, the two protected operators and
+plaintext diagnostics (Secs.~\ref{sec:cpu}--\ref{sec:compiled}). The
+client deals every Beaver triple and runs all operations outside one
+head's QK scores and the output projection. Trusted-local FP32 has lower
+median latency on loopback, so the prototype accounts for communication
+and disclosure rather than demonstrating offloading.
+
 \section{Threat Model and Execution Semantics}
 \paragraph{Participants and disclosure.}
 A trusted client owns user context $X_u$ and authorizes specific disclosures.
@@ -99,7 +108,17 @@ ShareRoute reports 2PC results with a separate Semi2k backend. The proposed
 3PC stage would require independent trust domains and at most one
 corrupted party.
 
-\section{Hierarchical Privacy Graph Design}
+\paragraph{Cohort selection.}
+The protocol cannot enforce the per-pair corruption bound: the two
+workers of either pair can add their shares and recover the private Q/K
+rows or the final hidden state. Because one operator can run many open
+P2P peers~\cite{sybil}, cohort validity (Sec.~\ref{sec:planning}) rests
+on a selection rule that bounds collusion, such as stake-weighted
+sampling~\cite{algorand}, operators certified as distinct or hardware
+attestation. We do not evaluate cohort selection. A client that cannot
+meet its collusion bound executes locally.
+
+\section{Hierarchical Privacy Graph Design}\label{sec:design}
 We propose a compiler in which a typed task DAG $\Gt=(V_t,E_t)$ carries
 schemas, privacy labels, cost profiles and optional validators. An
 admissible rewrite produces $\Gtnew\in\mathcal{R}(\Gt)$. The operator
@@ -178,7 +197,7 @@ and derives taint and feasible islands. It scores only plans within one
 adversary stage. A failed contract, unsafe disclosure, poisoned artifact,
 missing MPC cohort or invalid numerical tolerance rejects the plan.
 
-\section{Compositional Planning and Security}
+\section{Compositional Planning and Security}\label{sec:planning}
 \subsection{Joint Cost Model}
 A plan $z=(\Gtnew,\pi,\kappa,S,p,\rho,m,b)$ selects a rewritten task graph, task placements $\pi$, cache actions $\kappa$, secure islands $S$, per-island MPC protocols $p$, cohorts/peer routes $\rho$, weight layout $m$, and offline budget $b$. A proposed cross-layer objective is
 \begin{equation}\label{eq:obj}
@@ -379,9 +398,9 @@ model predictions depend on the resulting serialization.
 \caption{Public-note lift for an order-insensitive record. The first
 private token determines the causal protection boundary. Moving the
 approved note ahead of that token lengthens the approved prefix without
-adding tokens. Teal marks the approved prefix. 
-% Field labels and separators
-% are omitted. Vector adaptation of the Gemini Nano Banana rendering.
+adding tokens. Teal marks the approved prefix. Field labels and separators
+are omitted.
+% Vector adaptation of the Gemini Nano Banana rendering.
 }
 \label{fig:record-lift}
 \end{figure}
@@ -573,8 +592,10 @@ model's causal mask on both authorized serializations to measure how
 layout changes protected QK communication and model predictions.
 
 Marill reduces MPC work through fine-tuning~\cite{marill}. Other studies
-optimize secure protocols or cache use and provide MPC
-backends~\cite{bolt,puma,secretflow,mpspdz,soal,fusefss,blb,mpcache}. Petals
+optimize secure protocols~\cite{bolt,puma,soal,fusefss,blb,iron,bumblebee},
+MPC-friendly approximations~\cite{mpcformer} or cache use~\cite{mpcache}.
+SecretFlow-SPU and MP-SPDZ provide MPC backends~\cite{secretflow,mpspdz}.
+Petals
 and PlanetServe study distributed inference, with optional TEE content
 protection in PlanetServe. SWARM studies distributed
 training~\cite{petals,planetserve,swarm}.
@@ -613,6 +634,8 @@ Measurements come from executable evaluations and archived records.
 \bibitem{apc} Zhang, Q., Wornow, M., Olukotun, K.: Agentic plan caching: Test-time memory for fast and cost-efficient LLM agents. NeurIPS (2025)
 \bibitem{bolt} Pang, Q., et al.: BOLT: Privacy-preserving, accurate and efficient inference for transformers. IEEE S\&P, 4753--4771 (2024)
 \bibitem{puma} Dong, Y., et al.: PUMA: Secure inference of LLaMA-7b in five minutes. Security and Safety 4, 2025014 (2025)
+\bibitem{sybil} Douceur, J.R.: The Sybil attack. In: Peer-to-Peer Systems (IPTPS 2002), pp. 251--260. Springer (2002)
+\bibitem{algorand} Gilad, Y., Hemo, R., Micali, S., Vlachos, G., Zeldovich, N.: Algorand: Scaling Byzantine agreements for cryptocurrencies. SOSP, pp. 51--68 (2017)
 \bibitem{canetti} Canetti, R.: Security and composition of multiparty cryptographic protocols. Journal of Cryptology 13(1), 143--202 (2000)
 \bibitem{prigraph-source} PriGraph: Privacy-constrained and reuse-aware reasoning graph rewriting for decentralized LLM inference. Source manuscript (2026)
 \bibitem{shareroute-source} ShareRoute: Adaptive secret-shared inference for untrusted GPU networks. Source manuscript (2026)
@@ -633,12 +656,15 @@ Measurements come from executable evaluations and archived records.
 \bibitem{cocoon} Lamba, A., et al.: Cocoon: Static information flow control in Rust. PACMPL 8(OOPSLA1), Article 100 (2024)
 \bibitem{promptseparation} Song, J., Park, J., Yang, E.: Secure autoregressive inference with prompt separation via key-value caching. \href{https://openreview.net/forum?id=tFNsosNMHT}{OpenReview manuscript} (2025, revised 2026)
 \bibitem{marill} Rathee, D., Li, D., Stoica, I., Zhang, H., Popa, R.: MPC-minimized secure LLM inference. arXiv:2408.03561 (2024)
-\bibitem{secretflow} Ma, J., et al.: SecretFlow-SPU: A performant and user-friendly framework for privacy-preserving machine learning. USENIX ATC, 17--33 (2023)
-\bibitem{mpspdz} Keller, M.: MP-SPDZ: A versatile framework for multi-party computation. ACM CCS (2020)
 \bibitem{soal} Zhao, L., Fang, Z.: Secure outlier-aware large language model inference. ICLR (2026)
 \bibitem{fusefss} Ma, Y., Li, Y., Schmid, S.: FuseFSS: Efficient secure LLM inference with function secret sharing. ICML (2026)
 \bibitem{blb} Xu, T., et al.: Breaking the layer barrier: Remodeling private transformer inference with hybrid CKKS and MPC. USENIX Security (2025)
+\bibitem{iron} Hao, M., et al.: Iron: Private inference on Transformers. NeurIPS (2022)
+\bibitem{bumblebee} Lu, W., et al.: BumbleBee: Secure two-party inference framework for large Transformers. NDSS (2025)
+\bibitem{mpcformer} Li, D., et al.: MPCFormer: Fast, performant and private Transformer inference with MPC. ICLR (2023)
 \bibitem{mpcache} Zeng, W., et al.: MPCache: MPC-friendly KV cache eviction for efficient private LLM inference. NeurIPS (2025)
+\bibitem{secretflow} Ma, J., et al.: SecretFlow-SPU: A performant and user-friendly framework for privacy-preserving machine learning. USENIX ATC, 17--33 (2023)
+\bibitem{mpspdz} Keller, M.: MP-SPDZ: A versatile framework for multi-party computation. ACM CCS (2020)
 \bibitem{swarm} Ryabinin, M., et al.: SWARM parallelism: Training large models can be surprisingly communication-efficient. ICML (2023)
 \end{thebibliography}
 \end{document}
