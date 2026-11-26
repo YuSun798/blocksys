@@ -4,8 +4,8 @@
 **Main file:** [`main.tex`](main.tex), official BlockSys 2027 `llncs.cls` v2.25, with figures in `figures/`.
 **Status:** research manuscript with causal diagnostics, an executable
 two-layout rewrite, and trusted-dealer protection for one Pythia attention
-head's QK scores and the output projection. Matched synthetic records and an
-SST-2 development sample quantify both communication and decision changes.
+head's QK scores and the output projection. Matched synthetic records and
+the full SST-2 development split quantify communication and decision changes.
 
 ## Contents
 
@@ -159,18 +159,32 @@ Download the official GLUE SST-2 archive and use the two pinned checkpoints.
 ```bash
 curl -fL https://dl.fbaipublicfiles.com/glue/data/SST-2.zip -o SST-2.zip
 TOKENIZERS_PARALLELISM=false python3 experiments/run_sst2_layout.py \
-  --dataset-zip SST-2.zip --checkpoint-70m /path/to/70m \
-  --checkpoint-160m /path/to/160m --protected-count 128 \
-  --transport tcp --output ./sst2-rerun
-python3 experiments/check_sst2_layout.py ./sst2-rerun --require-full-tcp \
+  --full-dev --dataset-zip SST-2.zip --checkpoint-70m /path/to/70m \
+  --checkpoint-160m /path/to/160m --protected-count 872 \
+  --transport tcp --output ./sst2-full-dev-rerun
+python3 experiments/check_sst2_layout.py ./sst2-full-dev-rerun --require-full-tcp \
   --dataset-zip SST-2.zip --tokenizer /path/to/70m/tokenizer.json
 ```
 
-The runner verifies the archive and development TSV hashes. It uses a
-fixed balanced sample without replacement, scores the same two labels in
-each layout, and compares the complete native and protected runs on TCP.
-The archived CSV contains dataset row IDs, digests, predictions and
-protocol counts. The benchmark text stays in the source dataset.
+The runner verifies the archive and development TSV hashes, scores the
+same two labels in each layout, and compares the complete native and
+protected runs on TCP. The full split has 872 examples and 3,488
+protected model-layout forwards. The archived CSV contains dataset row
+IDs, digests, predictions and protocol counts. The benchmark text stays
+in the source dataset. The earlier 128-example balanced run can be
+reproduced with `--protected-count 128` and the default selection.
+
+For the plaintext comparison, use `Qwen/Qwen3-0.6B` at revision
+`c1899de289a04d12100db370d81485cdf75e47ca`. The runner validates the
+checkpoint and applies the same fixed prompt pair to all 872 rows.
+
+```bash
+TOKENIZERS_PARALLELISM=false python3 experiments/run_sst2_qwen3.py \
+  --dataset-zip SST-2.zip --checkpoint /path/to/qwen3-0.6b \
+  --output ./sst2-qwen3-rerun
+python3 experiments/run_sst2_qwen3.py --verify \
+  --dataset-zip SST-2.zip --output ./sst2-qwen3-rerun
+```
 
 ## Reproduce the matched rewrite × island ablation
 

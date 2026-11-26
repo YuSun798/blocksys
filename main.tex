@@ -39,10 +39,12 @@ head's QK scores and the output projection. The client runs the remaining
 operations. In a matched Pythia-70M and Pythia-160M sweep with 1,440
 protected executions, the joint layout and operator policy holds mean
 QK peer openings at 25,600 bytes across three lengths while total traffic
-grows. Trusted-local FP32 has lower median latency on loopback. Each
-protected decision matches its same-layout FP32 reference. On 160M,
+grows. Trusted-local FP32 has lower median latency on loopback. On 160M,
 reordering lowers field-copy accuracy from 113/144 to 77/144 and raises
-accuracy on a balanced SST-2 sample from 80/128 to 94/128. A gate
+FP32 accuracy on the full SST-2 development split from 549/872 to 649/872.
+Qwen3-0.6B reaches the majority baseline after rewriting in plaintext.
+On SST-2, 3,486 of 3,488 protected Pythia decisions match same-layout FP32.
+Two near-tied 70M predictions differ. A gate
 enumerates the allowed input values and admits 12 of 36 layout changes on
 160M. Its protected reruns preserve all 288 baseline decisions across
 both models. The experiments quantify communication savings and show
@@ -520,27 +522,31 @@ Model & Tokens & Admitted & Positive & Setup (ms) & Warm ratio & Break-even\\
 \end{table}
 
 \paragraph{SST-2 layout sensitivity.}
-We sample 64 negative and 64 positive examples from the official GLUE
-SST-2 development split~\cite{sst,glue}. Each review is treated as the
-private span. Both prompts use the same two single-token labels and
-end with a sentiment query. Moving a fixed public instruction ahead
-of the review expands the approved prefix from 18 to 33 tokens.
-Lengths (42--89 tokens), token multisets and private spans match
-exactly. All 512 protected forwards agree with the corresponding native
-choices. Mean QK peer openings fall from 1.990 to 0.908 MB in both models.
-On 160M the accuracy change reverses the direction observed on field
-copying. On 70M both accuracies are near the 64/128 constant-label
-baseline, and correct positive predictions fall from 10 to 5
-(Table~\ref{tab:sst2}). We use one fixed zero-shot prompt pair and report
-a descriptive comparison on the development sample. We did not check
-for overlap with model training data. Reviews are outside the gate's
-enumerated domain.
+We use all 872 official GLUE SST-2 development examples~\cite{sst,glue},
+with 428 negative and 444 positive labels. A fixed zero-shot prompt pair
+scores two single-token labels with the review treated as private.
+Moving a public instruction grows the approved Pythia prefix from 18 to
+33 tokens. Paired lengths (39--96 tokens), token multisets and private
+spans match. The 160M accuracy change reverses the field-copy result.
+On 70M accuracy stays near the 444/872 majority baseline as correct
+positive predictions fall from 58 to 31 (Table~\ref{tab:sst2}).
+All 3,488 protected forwards match their fixed-point references.
+Quantization changes two 70M choices with absolute FP32 label margins
+below $5\times10^{-4}$. Mean QK peer openings fall from 1.994 to
+0.909 MB in both models.
+
+Qwen3-0.6B~\cite{qwen3} uses the same literal prompts in CPU FP32
+without a chat wrapper. Its matched pairs extend the approved prefix
+from 17 to 31 tokens and reach the majority baseline after rewriting
+(Table~\ref{tab:sst2}). The reviews fall outside the enumerated gate
+domain. Overlap with training data was not checked.
 
 \begin{table}[!ht]
 \centering
-\caption{Paired SST-2 choices for each checkpoint on the same 128
+\caption{Paired native FP32 choices on all 872 SST-2 development
 examples. Change is in percentage points with descriptive 95\%
-paired-bootstrap intervals over examples.}
+paired-bootstrap intervals over examples. Qwen3 was evaluated in
+plaintext.}
 \label{tab:sst2}
 \small\renewcommand{\arraystretch}{1.12}\setlength{\tabcolsep}{5pt}
 \begin{tabular}{@{}lrrrrr@{}}
@@ -552,36 +558,30 @@ Model & Original & Rewrite & Wrong$\to$right & Right$\to$wrong & Change (pp)\\
 \end{table}
 
 \section{Related Work}
-PPMI combines task decomposition and encrypted retrieval. PRISM routes
-requests across cloud and edge, and MINIM filters UI observations locally.
-Agentic-PPML proposes intent-based routing to private domains.
-Split-and-Denoise sends locally perturbed
-embeddings~\cite{ppmi,prism,minim,agenticppml,splitdenoise}. Collaborative
-numerical reasoning uses remote code to compute local answers. APC caches task
-plans, and RelayCaching reuses decoding KV state~\cite{apc,collab,relaycache}.
-LLMCompiler, equality saturation, HEFT and information-flow control inform
-the graph representation and scheduling~\cite{compiler,egg,heft,sabelfeld,cocoon}.
+Prior work studies encrypted retrieval, cloud--edge routing, local
+sanitization, intent-based private routing and locally perturbed
+embeddings~\cite{ppmi,prism,minim,agenticppml,splitdenoise}. Related systems
+reuse task plans, remote code and decoding KV state~\cite{apc,collab,relaycache}.
+We draw on graph planning, scheduling and information-flow
+control~\cite{compiler,egg,heft,sabelfeld,cocoon}.
 
 Song et al.~\cite{promptseparation} separate public and private prompt
-tokens using KV precomputation and an adjusted attention mask. We
-change the serialization of an authorized task and keep the model's
-causal mask for each resulting prompt. This lets us measure how layout
-changes both the communication of a selected QK operator and model
-predictions under otherwise matched conditions.
+tokens with KV precomputation and a modified attention mask. We use the
+model's causal mask on both authorized serializations to measure how
+layout changes protected QK communication and model predictions.
 
-Marill reduces MPC work by adapting the model during fine-tuning~\cite{marill}.
-Our design targets changes in the dependency graph of a fixed model
-after a task rewrite. SecretFlow-SPU and MP-SPDZ provide MPC backends.
-PUMA, BOLT, SOAL, FuseFSS, BLB and MPCache study protocol or cache
-costs for secure inference~\cite{bolt,puma,secretflow,mpspdz,soal,fusefss,blb,mpcache}.
-Petals and PlanetServe study distributed inference, with optional TEE
-content protection in PlanetServe. SWARM studies training across
-heterogeneous workers~\cite{petals,planetserve,swarm}.
+Marill reduces MPC work through fine-tuning~\cite{marill}. Other studies
+optimize secure protocols or cache use and provide MPC
+backends~\cite{bolt,puma,secretflow,mpspdz,soal,fusefss,blb,mpcache}. Petals
+and PlanetServe study distributed inference, with optional TEE content
+protection in PlanetServe. SWARM studies distributed
+training~\cite{petals,planetserve,swarm}.
 
 \section{Limitations, Ethics, and Conclusion}
-Experiments cover two checkpoints in one family, synthetic records,
-an SST-2 sample and sequential runs on one loopback host. Workers see
-public selectors and request dimensions. Full-model offload, generation,
+Protected experiments cover two checkpoints in one family, synthetic
+records, SST-2 development examples and sequential loopback runs.
+Qwen3 provides a plaintext comparison. Workers see public selectors and
+request dimensions. Full-model offload, generation,
 WAN performance and active security require separate evaluation. Cache
 reuse, cohort selection and protocol choice are parts of the proposed
 design. The measured prototype shows how authorized serialization can
@@ -603,7 +603,7 @@ Measurements come from executable evaluations and archived records.
 \subsubsection{\discintname} The authors declare no competing interests relevant to this work.
 \end{credits}
 
-\begin{thebibliography}{33}
+\begin{thebibliography}{34}
 \bibitem{petals} Borzunov, A., et al.: Petals: Collaborative inference and fine-tuning of large models. ACL System Demonstrations (2023)
 \bibitem{planetserve} Fang, F., et al.: PlanetServe: A decentralized, scalable, and privacy-preserving overlay for democratizing large language model serving. NSDI (2026)
 \bibitem{ppmi} Bae, Y., et al.: PPMI: Privacy-preserving LLM interaction with Socratic chain-of-thought reasoning and homomorphically encrypted vector databases. arXiv:2506.17336 (2025)
@@ -618,6 +618,7 @@ Measurements come from executable evaluations and archived records.
 \bibitem{beaver} Beaver, D.: Efficient multiparty protocols using circuit randomization. In: Advances in Cryptology -- CRYPTO '91, pp. 420--432. Springer (1992)
 \bibitem{sst} Socher, R., et al.: Recursive deep models for semantic compositionality over a sentiment treebank. EMNLP, 1631--1642 (2013)
 \bibitem{glue} Wang, A., et al.: GLUE: A multi-task benchmark and analysis platform for natural language understanding. BlackboxNLP, 353--355 (2018)
+\bibitem{qwen3} Yang, A., et al.: Qwen3 technical report. arXiv:2505.09388 (2025)
 \bibitem{minim} Yu, H., et al.: MINIM: Privacy-aware minimal view for agents via trusted local sanitization. ICML, PMLR 306 (2026)
 \bibitem{agenticppml} Zhang, M., Liu, Z., Huang, J., Liu, X.: Agentic privacy-preserving machine learning. arXiv:2508.02836 (2025)
 \bibitem{splitdenoise} Mai, P., et al.: Split-and-denoise: Protect large language model inference with local differential privacy. ICML (2024)

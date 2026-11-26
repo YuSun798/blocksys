@@ -7,6 +7,7 @@ from pathlib import Path
 
 from check_sst2_layout import check as check_sst2
 from loopback_2pc import WIDTHS
+from run_sst2_qwen3 import verify_archive as check_qwen3
 
 ROOT = Path(__file__).resolve().parent
 FIGURES = ROOT.parent / "figures"
@@ -134,15 +135,26 @@ def plot_tables():
                 f"{row['median_paired_baseline_over_gated']:.3f}",
                 f"{statistics.median(projections):g}" if projections else r"\textemdash",
             )) + r" \\")
-    sst2 = check_sst2(ROOT / "results", require_full_tcp=True)
+    sst2 = check_sst2(ROOT / "results" / "sst2-full-dev", require_full_tcp=True)
+    qwen3 = check_qwen3(ROOT / "results" / "sst2-qwen3")["results"]["full_dev"]
     sample_size = sst2["records"]
+    if qwen3["examples"] != sample_size:
+        raise ValueError("SST-2 table checkpoints must share the full development split")
+    model_rows = [
+        ("Pythia-" + key.upper(), sst2["models"][key])
+        for key in ("70m", "160m")
+    ]
+    model_rows.append(("Qwen3-0.6B", {
+        **qwen3["paired"],
+        "original_correct": qwen3["original"]["native_correct"],
+        "rewritten_correct": qwen3["rewritten"]["native_correct"],
+    }))
     sst2_rows = []
-    for model in ("70m", "160m"):
-        row = sst2["models"][model]
+    for model, row in model_rows:
         delta = 100 * row["paired_accuracy_difference"]
         lower, upper = (100 * bound for bound in row["paired_bootstrap_95_interval"])
         sst2_rows.append(" & ".join((
-            model.upper(),
+            model,
             f"{row['original_correct']}/{sample_size}",
             f"{row['rewritten_correct']}/{sample_size}",
             str(row["incorrect_to_correct"]),

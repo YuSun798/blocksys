@@ -27,6 +27,7 @@ DEV_SHA256 = "54a9c12c77e402fc14d6a66a506f24d999f596b0176eb777c972cccc2f9cc4b0"
 MEMBER = "SST-2/dev.tsv"
 SEED = 20271122
 PER_CLASS = 64
+DEV_ROWS = 872
 LABELS = ("negative", "positive")
 LAYOUTS = ("original", "rewritten")
 HEADER = "Task: Classify the sentiment of a movie review as negative or positive.\n"
@@ -51,7 +52,7 @@ class Prompt:
     private_char_start: int
 
 
-def load_data(path):
+def load_data(path, full_dev=False):
     if hashlib.sha256(path.read_bytes()).hexdigest() != ZIP_SHA256:
         raise ValueError("input is not the pinned GLUE SST-2 official archive")
     with zipfile.ZipFile(path) as archive:
@@ -59,18 +60,22 @@ def load_data(path):
     if hashlib.sha256(content).hexdigest() != DEV_SHA256:
         raise ValueError("official dev.tsv hash mismatch")
     header, *lines = content.decode("utf-8").splitlines()
-    if header != "sentence\tlabel" or len(lines) != 872:
+    if header != "sentence\tlabel" or len(lines) != DEV_ROWS:
         raise ValueError("unexpected SST-2 dev row count or schema")
-    classes = {0: [], 1: []}
+    examples = []
     for index, line in enumerate(lines):
         sentence, label = line.rsplit("\t", 1)
         sentence = sentence.strip()
         label = int(label)
-        if not sentence or "\t" in sentence or label not in classes:
+        if not sentence or "\t" in sentence or label not in (0, 1):
             raise ValueError(f"malformed SST-2 dev row {index}")
-        classes[label].append(Example(index, sentence, label))
+        examples.append(Example(index, sentence, label))
+    if full_dev:
+        return examples
+
     rng = random.Random(SEED)
-    sampled = [example for label in (0, 1) for example in rng.sample(classes[label], PER_CLASS)]
+    sampled = [example for label in (0, 1) for example in
+               rng.sample([row for row in examples if row.label == label], PER_CLASS)]
     rng.shuffle(sampled)
     return sampled
 
@@ -238,15 +243,18 @@ def main():
     parser.add_argument("--checkpoint-70m", type=Path)
     parser.add_argument("--checkpoint-160m", type=Path)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--full-dev", action="store_true",
+                        help="use all 872 official examples in source-row order")
     parser.add_argument("--protected-count", type=int, default=0)
     parser.add_argument("--transport", choices=("tcp", "unix"), default="tcp")
     args = parser.parse_args()
     checkpoints = {key: path for key, path in (
         ("70m", args.checkpoint_70m), ("160m", args.checkpoint_160m),
     ) if path is not None}
-    if not checkpoints or not 0 <= args.protected_count <= 2 * PER_CLASS:
-        parser.error("provide a checkpoint and 0–128 protected examples per model")
-    examples = load_data(args.dataset_zip)
+    size = DEV_ROWS if args.full_dev else 2 * PER_CLASS
+    if not checkpoints or not 0 <= args.protected_count <= size:
+        parser.error(f"provide a checkpoint and 0–{size} protected examples per model")
+    examples = load_data(args.dataset_zip, args.full_dev)
     rows = []
     summary = {}
     for key, checkpoint in checkpoints.items():
@@ -266,8 +274,9 @@ def main():
         "dataset": {
             "name": "GLUE SST-2 official development", "source_url": DATASET_URL,
             "dataset_zip_sha256": ZIP_SHA256, "member": MEMBER,
-            "dev_tsv_sha256": DEV_SHA256, "split_rows": 872,
-            "sample_seed": SEED, "examples_per_label": PER_CLASS,
+            "dev_tsv_sha256": DEV_SHA256, "split_rows": DEV_ROWS,
+            "sample_seed": None if args.full_dev else SEED,
+            "examples_per_label": None if args.full_dev else PER_CLASS,
             "sample_ids": [ex.index for ex in examples],
             "normalization": "UTF-8 official row sentence stripped with str.strip()",
         },
@@ -289,6 +298,8 @@ def main():
         "raw_sha256": hashlib.sha256(raw.read_bytes()).hexdigest(),
         "summary": summary,
     }
+    if args.full_dev:
+        report["dataset"]["selection"] = "full-dev"
     (args.output / "sst2_layout_summary.json").write_text(json.dumps(report, indent=2) + "\n")
 
 

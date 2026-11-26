@@ -11,7 +11,7 @@ In-range disclosure relies on a trusted caller.
 
 The main paper retains matched traffic, local latency controls, the 160M
 accuracy regression on field copying, and the opposite change on the
-SST-2 sample. The paired SST-2 table is generated from the checked TCP
+full SST-2 development split. The paired SST-2 table is generated from the checked TCP
 archive. The gate is reported as a repeated check of its enumerated input
 domain, with conditional break-even in the table. The synthetic arithmetic
 ablation and sender-delay sweep remain in the repository archive. The
@@ -23,7 +23,8 @@ the full 128-example SST-2 sample over TCP. The post-change run matched
 the prior archive on all 512 prompt fingerprints, native and protected
 choices, ring checks and protocol counts. The independent verifier
 re-tokenized 256 prompt layouts from the original development split.
-The paper continues to use the prior archive for recorded timings.
+The first two runs used the same balanced subset and preceded the full
+development experiment below.
 
 ## Source-result provenance matrix
 
@@ -427,7 +428,7 @@ one model family.
 
 
 
-## External-text control on GLUE SST-2
+## Initial 128-example SST-2 diagnostic
 
 The run uses 128 rows sampled without replacement from the official
 872-row development split, with 64 rows per label and a fixed seed of
@@ -467,3 +468,58 @@ and does not certify unrestricted review text.
 Sources: [SST](https://aclanthology.org/D13-1170/),
 [GLUE](https://aclanthology.org/W18-5446/),
 [official distribution ZIP](https://dl.fbaipublicfiles.com/glue/data/SST-2.zip).
+
+## Full SST-2 development split
+
+The manuscript uses all 872 official examples in source order, with 428
+negative and 444 positive labels. The prompts, model checkpoints and TCP
+protocol are identical to the earlier diagnostic. Re-tokenization from
+the pinned original split reproduces 1,744 prompt layouts. The paired
+prompts have lengths 39–96, equal token multisets and identical within-pair
+private token spans. Both checkpoints use an 18-token original approved
+prefix and a 33-token rewritten prefix. All 512 rows shared with the
+earlier archive match on prompt fingerprints, predictions, ring status
+and communication counts.
+
+| Checkpoint | Original / rewrite FP32 correct | Wrong to right | Right to wrong | FP32 agreement of protected runs |
+| --- | ---: | ---: | ---: | ---: |
+| Pythia-70M | 441 / 452 of 872 | 48 | 37 | 1,742 / 1,744 |
+| Pythia-160M | 549 / 649 of 872 | 132 | 32 | 1,744 / 1,744 |
+
+All 3,488 TCP forwards pass the exact fixed-point ring checks. The two
+floating-point decision differences are Pythia-70M on row 521 in the
+original layout and row 471 in the rewritten layout. Both are negative
+examples with absolute native label margins below 0.0005. The original
+layout changes from a positive prediction to a negative prediction at
+row 521. The rewritten layout changes in the opposite direction at row
+471. The resulting protected correct counts are 442 and 451 on 70M.
+The 160M predictions agree throughout. These floating-point exceptions
+are outside the typed-record gate's input domain.
+
+The 70M FP32 layout change is +1.26 percentage points with a descriptive
+paired-bootstrap 95% interval of [−0.80, +3.33]. Correct positive
+predictions decline from 58 to 31 of 444. The majority baseline is 444 of
+872. The 160M change is +11.47 points with interval [+8.72, +14.33].
+Both Pythia models reduce mean measured QK peer payload from about
+1.994 MB to 0.909 MB. Results are from one fixed zero-shot prompt pair.
+
+### Plaintext Qwen3 comparison
+
+The archived Qwen3-0.6B checkpoint uses the same literal prompts and
+decisions over two fixed single-token label continuations. The test runs
+1,744 native CPU FP32 forwards over the same 872 rows. Independent
+re-tokenization reproduces all prompt, token multiset and private-span
+hashes and both actual label continuations. Paired lengths, token
+inventories and private spans match within Qwen3. Its public prefixes
+are 17 and 31 tokens. The private-span calculation conservatively
+includes a token containing the following line break on 853 examples.
+
+Native correct counts change from 439 to 444, with 15 improvements and
+10 regressions. The downstream change of +0.57 points has a descriptive
+paired-bootstrap 95% interval of [−0.57, +1.72]. The rewritten layout
+reaches the majority baseline. These results quantify the effect of
+layout under this fixed prompt in a second architecture. The protected
+traffic and fixed-point comparisons apply to the Pythia checkpoints.
+The identical 128-row subset is retained in the Qwen3 summary for
+comparison with the preliminary Pythia diagnostic.
+[Qwen3 technical report](https://arxiv.org/abs/2505.09388)

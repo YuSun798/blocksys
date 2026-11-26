@@ -18,6 +18,8 @@ from check_cross_layer_scale import checkpoint_width
 ZIP_SHA = "d67e16fb55739c1b32cdce9877596db1c127dc322d93c082281f64057c16deaa"
 DEV_SHA = "54a9c12c77e402fc14d6a66a506f24d999f596b0176eb777c972cccc2f9cc4b0"
 MEMBER = "SST-2/dev.tsv"
+DEV_ROWS = 872
+FULL_DEV = "full-dev"
 SEED = 20271122
 PER_LABEL = 64
 
@@ -26,7 +28,7 @@ def sha(data):
     return hashlib.sha256(data).hexdigest()
 
 
-def pinned_rows(path):
+def pinned_rows(path, full_dev=False):
     if sha(path.read_bytes()) != ZIP_SHA:
         raise ValueError("expected the pinned original GLUE SST-2 ZIP")
     with zipfile.ZipFile(path) as source:
@@ -37,10 +39,13 @@ def pinned_rows(path):
     labels = [int(row["label"]) for row in parsed]
     if Counter(labels) != {0: 428, 1: 444}:
         raise ValueError("official dev split must contain 872 binary examples")
-    rng = random.Random(SEED)
-    sample = [i for label in (0, 1) for i in
-              rng.sample([i for i, value in enumerate(labels) if value == label], PER_LABEL)]
-    rng.shuffle(sample)
+    if full_dev:
+        sample = range(DEV_ROWS)
+    else:
+        rng = random.Random(SEED)
+        sample = [i for label in (0, 1) for i in
+                  rng.sample([i for i, value in enumerate(labels) if value == label], PER_LABEL)]
+        rng.shuffle(sample)
     return {i: (parsed[i]["sentence"].strip(), labels[i]) for i in sample}
 
 
@@ -75,6 +80,7 @@ LAYOUTS = ("original", "rewritten")
 MODEL_NAMES = {m: f"EleutherAI/pythia-{m}-deduped" for m in ("70m", "160m")}
 DATA_URL = "https://dl.fbaipublicfiles.com/glue/data/SST-2.zip"
 SAMPLE_SHA = "da7729b5655ea981c0da9cfff331bbd3e7dd30eddaac58772f34a1a1f517baea"
+FULL_DEV_SHA = "017dee7b05ee71f2df834d1dc21bbdad22f4d2928423122c24b27024653b62c8"
 TOKENIZER_SHA = "c24618a1b3e6a38167beff1c72cffd126c3a66254347304b50547d12c5f25624"
 CONTRACT = {
     "header": "Task: Classify the sentiment of a movie review as negative or positive.\n",
@@ -110,16 +116,25 @@ def model_widths(metadata):
 
 def read_metadata(directory):
     metadata = json.loads((directory / "sst2_layout_summary.json").read_text())
+    dataset = metadata["dataset"]
+    selection = dataset.get("selection")
+    if selection not in (None, FULL_DEV):
+        raise ValueError("unsupported SST-2 selection")
+    full_dev = selection == FULL_DEV
     expected = {
         "name": "GLUE SST-2 official development", "source_url": DATA_URL,
         "dataset_zip_sha256": ZIP_SHA, "member": MEMBER, "dev_tsv_sha256": DEV_SHA,
-        "split_rows": 872, "sample_seed": SEED, "examples_per_label": PER_LABEL,
+        "split_rows": DEV_ROWS, "sample_seed": None if full_dev else SEED,
+        "examples_per_label": None if full_dev else PER_LABEL,
         "normalization": "UTF-8 official row sentence stripped with str.strip()",
     }
-    if any(metadata["dataset"][field] != value for field, value in expected.items()):
-        raise ValueError("dataset manifest does not describe the pinned SST-2 sample")
-    sample_ids = metadata["dataset"]["sample_ids"]
-    if len(sample_ids) != 2 * PER_LABEL or len(set(sample_ids)) != len(sample_ids):
+    if any(dataset[field] != value for field, value in expected.items()):
+        raise ValueError("dataset manifest does not describe the pinned SST-2 selection")
+    sample_ids = dataset["sample_ids"]
+    if full_dev:
+        if sample_ids != list(range(DEV_ROWS)):
+            raise ValueError("full dev split must include every official row in order")
+    elif len(sample_ids) != 2 * PER_LABEL or len(set(sample_ids)) != len(sample_ids):
         raise ValueError("dataset manifest does not have 128 distinct IDs")
     if metadata["layout_contract"] != CONTRACT or (
             metadata["head_index"], metadata["layer_index"], metadata["head_width"]) != (0, 1, 64):
@@ -251,8 +266,9 @@ def check_input_pairs(actual, metadata, examples=None, tokenizer_path=None):
             checked_prompts += 1
         if private_ids and private_ids[0] != private_ids[1]:
             raise ValueError(f"secret token span changed between layouts at {idx}")
-    if source_hash.hexdigest() != SAMPLE_SHA:
-        raise ValueError("selected IDs, sentence fingerprints or labels differ from the pinned sample")
+    expected_hash = FULL_DEV_SHA if metadata["dataset"].get("selection") == FULL_DEV else SAMPLE_SHA
+    if source_hash.hexdigest() != expected_hash:
+        raise ValueError("selected IDs, sentence fingerprints or labels differ from the pinned selection")
     if tokenizer_path is not None:
         encoded = [tokenizer.encode(" " + name, add_special_tokens=False).ids for name in CONTRACT["labels"]]
         if encoded != [[token] for token in candidates]:
@@ -301,17 +317,19 @@ def verify_summary(actual, metadata, model):
 
 def check(directory, dataset=None, tokenizer=None, require_full_tcp=False):
     metadata, models = read_metadata(directory)
+    sample_ids = metadata["dataset"]["sample_ids"]
     if require_full_tcp and (set(models) != set(MODEL_NAMES)
-                             or metadata["protected_examples_per_model"] != 2 * PER_LABEL
+                             or metadata["protected_examples_per_model"] != len(sample_ids)
                              or metadata["protected_transport"] != "TCP loopback"):
-        raise ValueError("paper evidence requires both pinned models and all 128 protected TCP examples each")
-    examples = pinned_rows(dataset) if dataset is not None else None
-    if examples is not None and list(examples) != metadata["dataset"]["sample_ids"]:
-        raise ValueError("recorded review IDs differ from deterministic stratified sampling")
+        raise ValueError("paper evidence requires both pinned models and TCP for every selected example")
+    full_dev = metadata["dataset"].get("selection") == FULL_DEV
+    examples = pinned_rows(dataset, full_dev=full_dev) if dataset is not None else None
+    if examples is not None and list(examples) != sample_ids:
+        raise ValueError("recorded review IDs differ from the pinned selection")
     actual = read_cases(directory / "sst2_layout_cases.csv", metadata, models)
     checked_prompts = check_input_pairs(actual, metadata, examples, tokenizer)
     return {
-        "records": len(metadata["dataset"]["sample_ids"]),
+        "records": len(sample_ids),
         "independently_retokenized_prompts": checked_prompts,
         "native_layout_results": len(actual),
         "measured_protected_layout_results": 2 * len(models) * metadata["protected_examples_per_model"],
