@@ -374,14 +374,11 @@ model predictions depend on the resulting serialization.
 \begin{figure}[!t]
 \centering
 \input{figures/record-lift}
-\Description{The original row reads header, private value, public note, query. The rewritten row moves the public note before the private value, extending the teal public prefix from one labeled block to two.}
-\caption{Public-note lift for an order-insensitive record. The first
-private token determines the causal protection boundary. Moving the
-approved note ahead of that token lengthens the approved prefix without
-adding tokens. Teal marks the approved prefix. 
-% Field labels and separators
-% are omitted. Vector adaptation of the Gemini Nano Banana rendering.
-}
+\Description{The rewritten prompt moves the same public note before the private value. The approved prefix grows from one position to two. The causal QK grids show fewer orange private-private dot products, while blue scores with one public operand are linear on shares.}
+\caption{Public-note lift for an order-insensitive record. In this
+four-position schematic, moving the note extends the approved prefix
+and reduces the number of causal QK scores that require Beaver
+products from six to three. Teal marks the approved prefix.}
 \label{fig:record-lift}
 \end{figure}
 

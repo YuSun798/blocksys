@@ -340,17 +340,18 @@ The captured Nano Banana reference is saved at
 
 ## Record-layout illustration provenance
 
-Gemini Apps' Nano Banana image tool rendered a conceptual figure from
-the existing typed serialization and checked visual specification.
-The left-to-right original is Header, Private value, Public note, Query.
-The rewritten row is Header, Public note, Private value, Query. Teal
-marks the eligible prefix, orange the private value and gray remaining
-positions protected by causal dependency. The rendered asset has no
-measurements or unverified protocol arrows. Its original 2,016 × 528
-JPEG is figures/record-lift-nano-banana.jpg and has SHA-256
-c148de377852a9f27eac54f8cd00df03693e1b9ed1ed795f6e03523f93e881ad.
-Caption and acknowledgments disclose the use of Nano Banana.
-The numeric tables are generated directly from archived measurements.
+Gemini Apps' Nano Banana image tool rendered a design reference for the
+two prompt strips and causal score grids. The captured 989 × 540 JPEG is
+`figures/record-lift-nano-banana.jpg` and has SHA-256
+`3f98c1ec262c13549ac96a418d7c73da4b82a08a975985a98e2c52641623ae39`.
+The paper uses an editable vector adaptation. Its prompt positions
+follow the typed record layouts. The score classes follow the causal
+mask and the approved-prefix cutoff. With four illustrative positions,
+prefix lengths one and two give six and three private-private scores,
+respectively, by the triangular count in the method. The caption
+identifies the example as a schematic. The acknowledgments disclose
+the use of Nano Banana. The numeric tables are generated directly from
+archived measurements.
 
 
 

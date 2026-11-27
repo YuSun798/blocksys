@@ -1,18 +1,109 @@
 \begin{tikzpicture}[
-  x=1cm,y=1cm,font=\small,
-  cell/.style={minimum height=.66cm,align=center,inner sep=2pt},
-  public/.style={draw=routePublic,fill=routePublic!18},
-  private/.style={draw=routeSecure,fill=routeSecure!22},
-  tail/.style={draw=black!50,fill=black!8}
+  x=1cm,y=1cm,font=\scriptsize,
+  token/.style={draw=black!45,fill=black!5,rounded corners=1.5pt,
+    minimum width=1.48cm,minimum height=.56cm,inner sep=0pt},
+  prefix token/.style={draw=routePublic,fill=routePublic!12},
+  private token/.style={draw=routeSecure,fill=routeSecure!13},
+  glyph/.style={line width=.51pt,line cap=round,line join=round},
+  boundary/.style={black!67,densely dashed,line width=.45pt},
+  score/.style={rounded corners=.35pt,line width=.35pt},
+  clear score/.style={draw=routePublic,fill=routePublic!36},
+  shared score/.style={draw=routeLocal,fill=routeLocal!14},
+  beaver score/.style={draw=routeSecure,fill=routeSecure!21},
+  masked score/.style={draw=black!28,fill=white}
 ]
-\node[anchor=east] at (-.30,.42) {Original};
-\node[anchor=east] at (-.30,-.42) {Rewritten};
-\foreach \y in {.42,-.42} {
-  \node[cell,public,text width=1.78cm] at (1,\y) {Header};
-  \node[cell,tail,text width=1.55cm] at (8.34,\y) {Query};
+\path[use as bounding box] (0,.29) rectangle (12.1,-3.09);
+\node[font=\footnotesize\bfseries] at (4.84,.08) {Prompt layout};
+\node[font=\footnotesize\bfseries] at (9.27,.08) {Causal QK};
+\node[font=\footnotesize\bfseries] at (11.05,.08) {Beaver count};
+
+\foreach \layout/\prefix/\y in {Original/1/-.79,Rewritten/2/-2.04} {
+  \node[font=\footnotesize\bfseries,anchor=west,inner sep=0pt] at (.04,\y) {\layout};
+  \node[token,prefix token] at (2.29,\y) {};
+  \node[token] at (7.39,\y) {};
+  \pgfmathsetmacro{\privateX}{2.29+1.70*\prefix}
+  \pgfmathsetmacro{\noteX}{9.68-\privateX}
+  \pgfmathsetmacro{\gateX}{\privateX-.85}
+  \node[token,private token] at (\privateX,\y) {};
+  \ifnum\prefix=2
+    \node[token,prefix token] at (\noteX,\y) {};
+  \else
+    \node[token] at (\noteX,\y) {};
+  \fi
+  \begin{scope}[shift={(2.29,\y)}]
+    \draw[glyph,routePublic] (-.13,.027) rectangle (.13,.20)
+      (-.075,.14) -- (.075,.14) (-.075,.087) -- (.038,.087);
+    \node[inner sep=0pt] at (0,-.117) {Header};
+  \end{scope}
+  \begin{scope}[shift={(\privateX,\y)}]
+    \draw[glyph,routeSecure] (-.09,.116) rectangle (.09,.025)
+      (-.047,.116) -- (-.047,.151) arc[start angle=180,end angle=0,radius=.047]
+      -- (.047,.116);
+    \node[inner sep=0pt] at (0,-.117) {Private value};
+  \end{scope}
+  \begin{scope}[shift={(\noteX,\y)}]
+    \draw[glyph,black!68]
+      (-.085,.021) -- (.085,.021) -- (.085,.143)
+      -- (.024,.204) -- (-.085,.204) -- cycle
+      (.024,.204) -- (.024,.143) -- (.085,.143)
+      (-.051,.095) -- (.051,.095) (-.051,.057) -- (.025,.057);
+    \node[inner sep=0pt] at (0,-.117) {Public note};
+  \end{scope}
+  \begin{scope}[shift={(7.39,\y)}]
+    \draw[glyph,black!68] (-.027,.133) circle[radius=.066]
+      (.020,.086) -- (.085,.022);
+    \node[inner sep=0pt] at (0,-.117) {Query};
+  \end{scope}
+  \draw[boundary] (\gateX,{\y-.425}) -- (\gateX,{\y+.34});
+  \draw[routePublic,line width=.65pt] (1.55,{\y-.32}) -- ++(0,-.075)
+    -- ({\gateX-.11},{\y-.395}) -- ++(0,.075);
+  \node[text=routePublic,anchor=north,inner sep=.35pt]
+    at ({(1.55+\gateX-.11)/2},{\y-.41}) {$p=\prefix$};
+
+  \begin{scope}[shift={(8.79,{\y+.48})}]
+    \node[inner sep=0pt,anchor=south] at (.48,.035) {$K\,\rightarrow$};
+    \node[inner sep=0pt,anchor=east] at (-.055,-.48) {$Q\,\downarrow$};
+    \foreach \row in {1,...,4} {
+      \foreach \col in {1,...,4} {
+        \begin{scope}[shift={({.242*(\col-1)},{-.242*(\row-1)})}]
+          \ifnum\col>\row
+            \draw[score,masked score] (0,0) rectangle (.204,-.204);
+          \else\ifnum\row>\prefix
+            \ifnum\col>\prefix
+              \draw[score,beaver score] (0,0) rectangle (.204,-.204);
+              \draw[routeSecure,line width=.43pt] (.031,-.17) -- (.17,-.031);
+            \else
+              \draw[score,shared score] (0,0) rectangle (.204,-.204);
+              \fill[routeLocal] (.102,-.102) circle[radius=.032];
+            \fi
+          \else
+            \draw[score,clear score] (0,0) rectangle (.204,-.204);
+          \fi\fi
+        \end{scope}
+      }
+    }
+  \end{scope}
+  \pgfmathtruncatemacro{\beaverCount}{(4-\prefix)*(5-\prefix)/2}
+  \node[draw=routeSecure,fill=routeSecure!9,rounded corners=2pt,
+    minimum width=.71cm,minimum height=.49cm,text=routeSecure,
+    font=\normalsize\bfseries] at (11.05,\y) {\beaverCount};
 }
-\node[cell,private,text width=2.38cm] at (3.39,.42) {Private value};
-\node[cell,tail,text width=2.38cm] at (6.06,.42) {Public note};
-\node[cell,public,text width=2.38cm] at (3.39,-.42) {Public note};
-\node[cell,private,text width=2.38cm] at (6.06,-.42) {Private value};
+
+\draw[-{Stealth[length=2pt]},black!62,line width=.45pt]
+  (5.69,-1.108) to[out=-117,in=37] (4.06,-1.718);
+\begin{scope}[shift={(0,-2.95)}]
+  \draw[black!18,line width=.45pt] (0,.21) -- (12.1,.21);
+  \draw[boundary] (.17,-.11) -- (.17,.11);
+  \node[anchor=west,inner sep=0pt] at (.30,0) {First private};
+  \draw[score,clear score] (2.25,.102) rectangle ++(.204,-.204);
+  \node[anchor=west,inner sep=0pt] at (2.57,0) {Clear};
+  \draw[score,shared score] (3.73,.102) rectangle ++(.204,-.204);
+  \fill[routeLocal] (3.832,0) circle[radius=.032];
+  \node[anchor=west,inner sep=0pt] at (4.05,0) {Linear on shares};
+  \draw[score,beaver score] (6.41,.102) rectangle ++(.204,-.204);
+  \draw[routeSecure,line width=.43pt] (6.441,-.068) -- (6.58,.071);
+  \node[anchor=west,inner sep=0pt] at (6.73,0) {Beaver};
+  \draw[score,masked score] (8.14,.102) rectangle ++(.204,-.204);
+  \node[anchor=west,inner sep=0pt] at (8.46,0) {Masked};
+\end{scope}
 \end{tikzpicture}
