@@ -130,8 +130,12 @@
   \draw[private] (-.41,-.12) rectangle ++(.19,.24);
   \draw[routeSecure,thin] (-.38,-.075) -- (-.25,.075);
   \draw[micro flow] (-.13,0) -- (.16,0);
-  \node[stage label,draw=routeLocal!75,rounded corners=.5pt,fill=routeLocal!10,inner sep=1.5pt] at (.38,0) {$Q$};
-  \node[stage label,draw=routeLocal!75,rounded corners=.5pt,fill=routeLocal!10,inner sep=1.5pt] at (.75,0) {$K$};
+  \foreach \x/\qkLabel in {.38/Q,.75/K} {
+    \draw[glyph,draw=routeLocal!75,fill=routeLocal!10]
+      (\x,0) ++(-1.6mm,-1.6mm) rectangle ++(3.2mm,3.2mm);
+    \node[stage label,inner sep=0pt,text height=1.55ex,text depth=.5ex]
+      at (\x,0) {$\qkLabel$};
+  }
 \end{scope}
 \begin{scope}[shift={(4.54,-3.85)}]
   \foreach \row in {0,...,3} {\foreach \col in {0,...,3} {
